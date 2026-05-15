@@ -207,6 +207,13 @@ tr:hover td{background:#fafafa}
     </div>
   </div>
   <div id="secondo-obiettivi" style="display:none">
+    <div id="obiettivi-summary" style="display:none;background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%);color:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 4px 12px rgba(124,58,237,.2)">
+      <div style="font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Totale versato verso obiettivi</div>
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <div style="font-size:32px;font-weight:700" id="obs-totale">€0</div>
+        <div style="font-size:13px;opacity:.85" id="obs-dettaglio"></div>
+      </div>
+    </div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
       <button class="btn btn-purple" onclick="openGoal(null)"><i class="ti ti-plus"></i>Nuovo Obiettivo</button>
     </div>
@@ -589,11 +596,56 @@ function renderSecondo(){
 // ── OBIETTIVI ────────────────────────────────────────────────────────
 function renderGoals(){
   const grid=document.getElementById('goals-grid');const empty=document.getElementById('goals-empty');
-  if(!data.obiettivi.length){grid.innerHTML='';empty.style.display='block';return;}empty.style.display='none';
+  const summary=document.getElementById('obiettivi-summary');
+  if(!data.obiettivi.length){grid.innerHTML='';empty.style.display='block';summary.style.display='none';return;}
+  empty.style.display='none';
+
+  // Calcola totale e dettaglio per riassunto
+  const perObj=data.obiettivi.map(g=>{
+    const acc=data.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id===g.id).reduce((s,m)=>s+Number(m.importo),0);
+    const accTot=Math.max(Number(g.accumulato_base)||0,acc);
+    return {nome:g.nome,acc:accTot};
+  });
+  const totale=perObj.reduce((s,o)=>s+o.acc,0);
+  summary.style.display='block';
+  document.getElementById('obs-totale').textContent=fmt(totale);
+  const dettaglio=perObj.filter(o=>o.acc>0).map(o=>`${o.nome}: ${fmt(o.acc)}`).join('  ·  ');
+  document.getElementById('obs-dettaglio').textContent=dettaglio||'Nessun versamento ancora';
+
   grid.innerHTML=data.obiettivi.map(g=>{
     const accM=data.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id===g.id).reduce((s,m)=>s+Number(m.importo),0);
     const acc=Math.max(Number(g.accumulato_base)||0,accM);const pct=Math.min(acc/Number(g.target)*100,100);
-    return `<div class="goal-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div><div style="font-weight:600;font-size:14px">${g.nome}</div>${g.scadenza?`<div style="font-size:11px;color:#9ca3af">Scadenza: ${dStr(g.scadenza)}</div>`:''}</div><div style="display:flex;gap:4px"><button class="btn btn-sm btn-ghost" data-action="edit-goal" data-id="${g.id}"><i class="ti ti-edit"></i></button><button class="btn btn-sm btn-danger" data-action="del-goal" data-id="${g.id}"><i class="ti ti-trash"></i></button></div></div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span>Accumulato: <strong style="color:#7c3aed">${fmt(acc)}</strong></span><span>Target: <strong>${fmt(g.target)}</strong></span></div><div class="progress-bar" style="height:12px;margin-bottom:6px"><div class="progress-fill" style="width:${pct}%;background:#7c3aed"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280"><span>${pct.toFixed(1)}% completato</span><span>Mancano ${fmt(Math.max(Number(g.target)-acc,0))}</span></div>${g.note?`<div style="font-size:12px;color:#9ca3af;margin-top:6px;border-top:1px solid #f3f4f6;padding-top:6px">${g.note}</div>`:''}</div>`;
+    // Calcola giorni rimanenti se c'è scadenza
+    let scadenzaInfo='';
+    if(g.scadenza){
+      const oggi=new Date();oggi.setHours(0,0,0,0);
+      const sc=new Date(g.scadenza+'T00:00:00');
+      const giorni=Math.ceil((sc-oggi)/(1000*60*60*24));
+      const colore=giorni<0?'#dc2626':giorni<=30?'#d97706':'#16a34a';
+      const testo=giorni<0?`Scaduto da ${Math.abs(giorni)}g`:giorni===0?'Scade oggi':giorni===1?'Scade domani':`Mancano ${giorni} giorni`;
+      scadenzaInfo=`<div style="display:flex;align-items:center;gap:6px;font-size:12px;margin-top:4px"><i class="ti ti-calendar-event" style="color:${colore};font-size:14px"></i><span style="color:${colore};font-weight:500">${dStr(g.scadenza)}</span><span style="color:#9ca3af">·</span><span style="color:${colore};font-weight:500">${testo}</span></div>`;
+    }
+    return `<div class="goal-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:15px;margin-bottom:2px">${g.nome}</div>
+          ${scadenzaInfo}
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px">
+          <button class="btn btn-sm btn-ghost" data-action="edit-goal" data-id="${g.id}"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-sm btn-danger" data-action="del-goal" data-id="${g.id}"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+        <span>Accumulato: <strong style="color:#7c3aed">${fmt(acc)}</strong></span>
+        <span>Target: <strong>${fmt(g.target)}</strong></span>
+      </div>
+      <div class="progress-bar" style="height:12px;margin-bottom:6px"><div class="progress-fill" style="width:${pct}%;background:#7c3aed"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280">
+        <span>${pct.toFixed(1)}% completato</span><span>Mancano ${fmt(Math.max(Number(g.target)-acc,0))}</span>
+      </div>
+      ${g.note?`<div style="font-size:12px;color:#9ca3af;margin-top:8px;border-top:1px solid #f3f4f6;padding-top:8px">${g.note}</div>`:''}
+    </div>`;
   }).join('');
 }
 
@@ -752,7 +804,7 @@ function generatePdf(){
 function exportData(){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='finanze_'+new Date().toISOString().split('T')[0]+'.json';a.click();}
 
 // ── DELEGATED EVENTS ─────────────────────────────────────────────────
-document.body.addEventListener('click',function(e){
+document.body.addEventListener('click',async function(e){
   const btn=e.target.closest('[data-action]');if(!btn)return;
   const action=btn.dataset.action,id=btn.dataset.id;
   if(action==='del-mov')deleteMov(id);
@@ -765,12 +817,18 @@ document.body.addEventListener('click',function(e){
     const pid=btn.dataset.pageId;
     const input=btn.closest('div').querySelector('input');
     const val=input.value.trim()||CORE_PAGES.find(p=>p.id===pid)?.label||pid;
-    data.navLabels[pid]=val;saveNavLabels();updateNavBtn(pid,val);showToast('Nome aggiornato ✓');
+    data.navLabels[pid]=val;
+    const {error}=await sb.from('impostazioni').upsert({chiave:'nav_labels',valore:JSON.stringify(data.navLabels)},{onConflict:'chiave'});
+    if(error){showToast('Errore salvataggio',true);return;}
+    updateNavBtn(pid,val);showToast('Nome aggiornato ✓');
   }
   else if(action==='reset-nav-label'){
     const pid=btn.dataset.pageId;
     const def=CORE_PAGES.find(p=>p.id===pid)?.label||pid;
-    delete data.navLabels[pid];saveNavLabels();updateNavBtn(pid,def);
+    delete data.navLabels[pid];
+    const {error}=await sb.from('impostazioni').upsert({chiave:'nav_labels',valore:JSON.stringify(data.navLabels)},{onConflict:'chiave'});
+    if(error){showToast('Errore salvataggio',true);return;}
+    updateNavBtn(pid,def);
     btn.closest('div').querySelector('input').value=def;showToast('Nome ripristinato');
   }
 });
@@ -780,6 +838,11 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 // ── INIT ─────────────────────────────────────────────────────────────
 (async()=>{
   await loadAll();
+  // Apply saved nav labels
+  CORE_PAGES.forEach(p=>{
+    const lbl=data.navLabels[p.id];
+    if(lbl)updateNavBtn(p.id,lbl);
+  });
   document.getElementById('month-select').value=now.getMonth();
   document.getElementById('budget-month-sel').value=now.getMonth();
   renderDashboard();
