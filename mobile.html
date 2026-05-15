@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Finanza">
+<title>Finanza</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --accent:#4f46e5;--accent-dark:#4338ca;
+  --bg:#f2f2f7;--surface:#fff;--surface2:#f9f9f9;
+  --border:#e5e5ea;--text:#1c1c1e;--muted:#8e8e93;
+  --green:#34c759;--red:#ff3b30;--amber:#ff9500;--purple:#af52de;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden}
+
+/* STATUS BAR SPACER */
+.status-bar{height:var(--safe-top);background:var(--accent)}
+
+/* HEADER */
+.header{background:var(--accent);padding:16px 20px 20px;color:#fff}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.header-title{font-size:17px;font-weight:600}
+.header-date{font-size:13px;opacity:.8}
+.header-sub{font-size:13px;opacity:.75;margin-top:2px}
+
+/* TABS */
+.tab-bar{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.tab{flex:1;padding:12px 0;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;border-bottom:2px solid transparent}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab i{font-size:20px}
+.tab span{font-size:10px}
+
+/* PAGES */
+.page{display:none;padding:16px 16px calc(16px + var(--safe-bottom))}
+.page.active{display:block}
+
+/* FORM CARD — iOS style */
+.form-card{background:var(--surface);border-radius:16px;overflow:hidden;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.form-row{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);gap:12px}
+.form-row:last-child{border-bottom:none}
+.form-row label{font-size:15px;color:var(--text);min-width:90px;flex-shrink:0}
+.form-row input,.form-row select{flex:1;border:none;outline:none;font-size:15px;color:var(--text);background:transparent;text-align:right;font-family:inherit;min-width:0}
+.form-row select{-webkit-appearance:none;cursor:pointer}
+.form-row input::placeholder{color:var(--muted)}
+
+/* SEGMENTED CONTROL */
+.seg-wrap{padding:12px 16px;background:var(--surface);border-radius:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.seg-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;font-weight:600}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:2px;gap:2px}
+.seg-btn{flex:1;padding:8px 6px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .2s}
+.seg-btn.active{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+
+/* BIG SUBMIT BUTTON */
+.btn-submit{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;box-shadow:0 4px 14px rgba(79,70,229,.35)}
+.btn-submit:active{opacity:.85;transform:scale(.98)}
+.btn-submit.loading{opacity:.7;pointer-events:none}
+
+/* RECENTI */
+.section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:20px 0 8px 4px}
+.mov-list{background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.mov-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.mov-item:last-child{border-bottom:none}
+.mov-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.mov-info{flex:1;min-width:0}
+.mov-name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mov-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.mov-amount{font-size:16px;font-weight:700;flex-shrink:0}
+.mov-amount.entrata{color:var(--green)}
+.mov-amount.uscita{color:var(--red)}
+.mov-amount.accumulo{color:var(--purple)}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-state i{font-size:48px;display:block;margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:15px}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(24px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#1c1c1e;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* LOADING */
+#loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:9999;display:flex;align-items:center;justify-content:center}
+.spinner{width:36px;height:36px;border:3px solid #e5e5ea;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* OBIETTIVO GROUP */
+#obiettivo-row{display:none}
+
+/* Importo grande */
+.importo-display{padding:20px 16px 8px;text-align:center}
+.importo-label{font-size:13px;color:var(--muted);margin-bottom:4px}
+.importo-big{font-size:48px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.importo-big input{font-size:48px;font-weight:700;color:var(--text);border:none;outline:none;background:transparent;width:100%;text-align:center;font-family:inherit}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+</head>
+<body>
+
+<div id="loading-overlay"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<div class="status-bar"></div>
+<div class="header">
+  <div class="header-top">
+    <div class="header-title">💰 Finanza</div>
+    <div class="header-date" id="header-date"></div>
+  </div>
+  <div class="header-sub" id="header-sub">Caricamento...</div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" data-tab="nuovo"><i class="ti ti-plus-circle"></i><span>Nuovo</span></button>
+  <button class="tab" data-tab="recenti"><i class="ti ti-list"></i><span>Recenti</span></button>
+</div>
+
+<!-- ══ TAB NUOVO ══ -->
+<div class="page active" id="page-nuovo">
+
+  <!-- Importo -->
+  <div class="importo-display">
+    <div class="importo-label">Importo</div>
+    <div class="importo-big">
+      <input type="number" id="mov-importo" inputmode="decimal" placeholder="0,00" step="0.01" min="0">
+    </div>
+  </div>
+
+  <!-- Entrata / Uscita -->
+  <div class="seg-wrap">
+    <div class="seg-label">Tipologia</div>
+    <div class="seg" id="seg-tipologia">
+      <button class="seg-btn" data-val="entrata" onclick="setTipologia('entrata')">↑ Entrata</button>
+      <button class="seg-btn active" data-val="uscita" onclick="setTipologia('uscita')">↓ Uscita</button>
+    </div>
+  </div>
+
+  <!-- Tipo movimento -->
+  <div class="seg-wrap" id="seg-tipo-wrap">
+    <div class="seg-label">Tipo</div>
+    <div class="seg" id="seg-tipo">
+      <button class="seg-btn active" data-val="uscita_variabile" onclick="setTipoMov('uscita_variabile')">Variabile</button>
+      <button class="seg-btn" data-val="uscita_fissa" onclick="setTipoMov('uscita_fissa')">Fissa</button>
+      <button class="seg-btn" data-val="accumulo" onclick="setTipoMov('accumulo')">2° Conto</button>
+    </div>
+  </div>
+
+  <!-- Campi -->
+  <div class="form-card">
+    <div class="form-row">
+      <label>Data</label>
+      <input type="date" id="mov-data">
+    </div>
+    <div class="form-row">
+      <label>Categoria</label>
+      <select id="mov-categoria"></select>
+    </div>
+    <div class="form-row" id="obiettivo-row">
+      <label>Obiettivo</label>
+      <select id="mov-obiettivo"><option value="">— Nessuno —</option></select>
+    </div>
+    <div class="form-row">
+      <label>Descrizione</label>
+      <input type="text" id="mov-desc" placeholder="Opzionale" inputmode="text">
+    </div>
+  </div>
+
+  <button class="btn-submit" id="btn-salva" onclick="saveMov()">
+    Salva movimento
+  </button>
+
+</div>
+
+<!-- ══ TAB RECENTI ══ -->
+<div class="page" id="page-recenti">
+  <div class="section-title">Ultimi 30 movimenti</div>
+  <div class="mov-list" id="mov-list"></div>
+  <div class="empty-state" id="mov-empty" style="display:none">
+    <i class="ti ti-inbox"></i>
+    <p>Nessun movimento ancora</p>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────────────
+const SUPABASE_URL='https://scuekneokzmjmbgnwzzj.supabase.co';
+const SUPABASE_KEY='sb_publishable_T3gPMGCoDpc-I1xSDiIsyQ_ZRS85xpI';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// ── State ─────────────────────────────────────────────────────────────
+let categorie=[], obiettivi=[], movimentiRecenti=[];
+let tipologia='uscita', tipoMov='uscita_variabile';
+
+const MONTHS=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const fmt=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n);
+const today=new Date();
+
+// ── UI UTILS ──────────────────────────────────────────────────────────
+function loading(show){document.getElementById('loading-overlay').style.display=show?'flex':'none';}
+function showToast(msg,err=false){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.style.background=err?'#ff3b30':'#1c1c1e';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── HEADER ────────────────────────────────────────────────────────────
+function updateHeader(){
+  const d=today;
+  document.getElementById('header-date').textContent=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+async function updateHeaderBalance(){
+  const yr=today.getFullYear(),mo=today.getMonth();
+  const {data:movs}=await sb.from('movimenti').select('importo,tipologia,tipo,data').gte('data',`${yr}-${String(mo+1).padStart(2,'0')}-01`);
+  if(!movs)return;
+  const ent=movs.filter(m=>m.tipologia==='entrata').reduce((s,m)=>s+Number(m.importo),0);
+  const usc=movs.filter(m=>m.tipologia==='uscita'&&m.tipo!=='accumulo').reduce((s,m)=>s+Number(m.importo),0);
+  document.getElementById('header-sub').textContent=`${MONTHS[mo]}: +${fmt(ent)}  −${fmt(usc)}  = ${fmt(ent-usc)}`;
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────
+document.querySelector('.tab-bar').addEventListener('click',e=>{
+  const tab=e.target.closest('.tab');if(!tab)return;
+  const id=tab.dataset.tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+  if(id==='recenti')renderRecenti();
+});
+
+// ── TIPOLOGIA ─────────────────────────────────────────────────────────
+function setTipologia(val){
+  tipologia=val;
+  document.querySelectorAll('#seg-tipologia .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===val));
+  // aggiorna tipo
+  if(val==='entrata'){
+    tipoMov='entrata';
+    document.getElementById('seg-tipo-wrap').style.display='none';
+  } else {
+    tipoMov='uscita_variabile';
+    document.getElementById('seg-tipo-wrap').style.display='block';
+    document.querySelectorAll('#seg-tipo .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.val==='uscita_variabile'));
+    document.getElementById('obiettivo-row').style.display='none';
+  }
+  populateCategorie();
+}
+
+function setTipoMov(val){
+  tipoMov=val;
+  document.querySelectorAll('#seg-tipo .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===val));
+  document.getElementById('obiettivo-row').style.display=val==='accumulo'?'flex':'none';
+}
+
+// ── POPULATE SELECTS ──────────────────────────────────────────────────
+function populateCategorie(){
+  const sel=document.getElementById('mov-categoria');
+  const filtered=categorie.filter(c=>c.tipo===tipologia||c.tipo==='entrambi');
+  sel.innerHTML=filtered.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+}
+
+function populateObiettivi(){
+  const sel=document.getElementById('mov-obiettivo');
+  sel.innerHTML='<option value="">— Nessuno —</option>'+obiettivi.map(o=>`<option value="${o.id}">${o.nome}</option>`).join('');
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────
+async function loadData(){
+  loading(true);
+  const [cats,obis,movs]=await Promise.all([
+    sb.from('categorie').select('*').order('nome'),
+    sb.from('obiettivi').select('*').order('nome'),
+    sb.from('movimenti').select('*,categorie(nome,colore)').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(30),
+  ]);
+  categorie=cats.data||[];
+  obiettivi=obis.data||[];
+  movimentiRecenti=movs.data||[];
+  populateCategorie();
+  populateObiettivi();
+  loading(false);
+  updateHeaderBalance();
+}
+
+// ── SAVE ─────────────────────────────────────────────────────────────
+async function saveMov(){
+  const importo=parseFloat(document.getElementById('mov-importo').value);
+  if(!importo||importo<=0){showToast('Inserisci un importo valido',true);return;}
+  const data_mov=document.getElementById('mov-data').value;
+  if(!data_mov){showToast('Seleziona una data',true);return;}
+  const cat=document.getElementById('mov-categoria').value;
+  if(!cat){showToast('Seleziona una categoria',true);return;}
+
+  const tipo_finale=tipologia==='entrata'?'entrata':tipoMov;
+  const mov={
+    id:'m'+Date.now(),
+    data:data_mov,
+    importo,
+    tipologia,
+    categoria:cat,
+    tipo:tipo_finale,
+    descrizione:document.getElementById('mov-desc').value||null,
+    obiettivo_id:tipo_finale==='accumulo'?document.getElementById('mov-obiettivo').value||null:null,
+  };
+
+  const btn=document.getElementById('btn-salva');
+  btn.classList.add('loading');btn.textContent='Salvataggio...';
+
+  const {error}=await sb.from('movimenti').insert(mov);
+
+  btn.classList.remove('loading');btn.textContent='Salva movimento';
+
+  if(error){showToast('Errore nel salvataggio',true);return;}
+
+  // Reset form
+  document.getElementById('mov-importo').value='';
+  document.getElementById('mov-desc').value='';
+  document.getElementById('mov-data').value=today.toISOString().split('T')[0];
+
+  showToast('✓ Movimento salvato!');
+  updateHeaderBalance();
+  // aggiorna lista recenti in background
+  loadRecenti();
+}
+
+// ── RECENTI ──────────────────────────────────────────────────────────
+async function loadRecenti(){
+  const {data:movs}=await sb.from('movimenti').select('*,categorie(nome,colore)').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(30);
+  movimentiRecenti=movs||[];
+}
+
+function renderRecenti(){
+  const list=document.getElementById('mov-list');
+  const empty=document.getElementById('mov-empty');
+  if(!movimentiRecenti.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const TL={entrata:'Entrata',uscita_fissa:'Fissa',uscita_variabile:'Variabile',accumulo:'2° Conto'};
+  list.innerHTML=movimentiRecenti.map(m=>{
+    const cat=m.categorie||{nome:'—',colore:'#8e8e93'};
+    const d=new Date(m.data+'T00:00:00');
+    const dateStr=`${d.getDate()} ${MONTHS[d.getMonth()]}`;
+    const amtClass=m.tipo==='accumulo'?'accumulo':m.tipologia;
+    const sign=m.tipologia==='entrata'?'+':'−';
+    return `<div class="mov-item">
+      <div class="mov-icon" style="background:${cat.colore}22">
+        <span style="font-size:18px">${m.tipologia==='entrata'?'↑':m.tipo==='accumulo'?'⇒':'↓'}</span>
+      </div>
+      <div class="mov-info">
+        <div class="mov-name">${cat.nome}</div>
+        <div class="mov-sub">${m.descrizione||TL[m.tipo]||m.tipo} · ${dateStr}</div>
+      </div>
+      <div class="mov-amount ${amtClass}">${sign}${fmt(m.importo)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+updateHeader();
+document.getElementById('mov-data').value=today.toISOString().split('T')[0];
+// init seg-tipo-wrap hidden for entrata (default is uscita so show)
+document.getElementById('seg-tipo-wrap').style.display='block';
+loadData();
+</script>
+</body>
+</html>
