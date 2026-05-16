@@ -61,9 +61,10 @@ tr:hover td{background:#fafafa}
 .empty{text-align:center;padding:40px;color:#9ca3af;font-size:14px}
 .empty i{font-size:40px;display:block;margin-bottom:8px}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:var(--muted)}
-.legend-item{display:flex;align-items:center;gap:4px}
-.legend-dot{width:10px;height:10px;border-radius:2px}
+.legend-item{display:flex;align-items:center;gap:6px;padding:4px 0;cursor:default}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.legend-name{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend-val{font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:20px}
 .tab-btn{padding:10px 20px;border:none;background:transparent;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
@@ -71,12 +72,25 @@ tr:hover td{background:#fafafa}
 .search-bar{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px}
 .search-bar i{color:var(--muted);font-size:16px}
 .search-bar input{border:none;outline:none;background:transparent;font-size:13px;color:var(--text);flex:1}
-/* Loading */
 #loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-size:15px;color:var(--muted)}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9998;opacity:0;transform:translateY(8px);transition:all .3s}
 .toast.show{opacity:1;transform:translateY(0)}
+
+/* Simulator */
+.sim-row{display:grid;grid-template-columns:160px 1fr 110px 100px;gap:12px;align-items:center;padding:8px;border-radius:8px;background:var(--muted-light);font-size:13px}
+.sim-cat{display:flex;align-items:center;gap:8px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sim-slider{width:100%;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer}
+.sim-slider::-webkit-slider-runnable-track{height:6px;background:#d1d5db;border-radius:3px}
+.sim-slider::-moz-range-track{height:6px;background:#d1d5db;border-radius:3px}
+.sim-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);margin-top:-6px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.sim-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid #fff;cursor:pointer}
+.sim-current{font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.sim-proj{font-weight:700;text-align:right;font-variant-numeric:tabular-nums;font-size:14px}
+.sim-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.sim-summary-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;font-weight:600}
+.sim-summary-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -93,6 +107,10 @@ tr:hover td{background:#fafafa}
   <button class="nav-btn" id="nav-secondo" data-page="secondo"><i class="ti ti-building-bank"></i><span>2° Conto</span></button>
   <button class="nav-btn" id="nav-budget" data-page="budget"><i class="ti ti-chart-pie"></i><span>Budget</span></button>
   <button class="nav-btn" id="nav-impostazioni" data-page="impostazioni"><i class="ti ti-settings"></i><span>Impostazioni</span></button>
+  <div id="clock-widget" style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--muted-light);border-radius:10px;font-size:12px;color:var(--text);font-weight:500;font-variant-numeric:tabular-nums">
+    <i class="ti ti-clock" style="color:var(--accent);font-size:14px"></i>
+    <span id="clock-text">--</span>
+  </div>
 </nav>
 
 <!-- DASHBOARD -->
@@ -117,21 +135,46 @@ tr:hover td{background:#fafafa}
   </div>
   <div class="charts-row">
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <h3 style="margin:0">Distribuzione</h3>
-        <div class="seg">
-          <button class="seg-btn active" id="pie-seg-usc" onclick="setPieSide('uscite')">Uscite</button>
-          <button class="seg-btn" id="pie-seg-ent" onclick="setPieSide('entrate')">Entrate</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div class="seg">
+            <button class="seg-btn active" id="pie-seg-usc" onclick="setPieSide('uscite')">Uscite</button>
+            <button class="seg-btn" id="pie-seg-ent" onclick="setPieSide('entrate')">Entrate</button>
+          </div>
+          <div class="seg">
+            <button class="seg-btn active" id="pie-fmt-pct" onclick="setPieFormat('pct')">%</button>
+            <button class="seg-btn" id="pie-fmt-eur" onclick="setPieFormat('eur')">€</button>
+          </div>
         </div>
       </div>
-      <div style="position:relative;width:100%;height:220px"><canvas id="pieChart"></canvas></div>
-      <div class="legend-row" id="pie-legend"></div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div id="pie-legend" style="flex:1;display:flex;flex-direction:column;gap:4px;font-size:12px;max-height:240px;overflow-y:auto;min-width:0"></div>
+        <div style="position:relative;width:220px;height:220px;flex-shrink:0"><canvas id="pieChart"></canvas></div>
+      </div>
     </div>
     <div class="card">
       <h3>Andamento mensile</h3>
       <div style="position:relative;width:100%;height:260px"><canvas id="barChart"></canvas></div>
     </div>
   </div>
+
+  <!-- SIMULATORE -->
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0">📈 Simulatore di proiezione</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="seg">
+          <button class="seg-btn active" id="sim-period-month" onclick="setSimPeriod('month')">Fine mese</button>
+          <button class="seg-btn" id="sim-period-year" onclick="setSimPeriod('year')">Fine anno</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="resetSimulator()"><i class="ti ti-refresh"></i>Reset</button>
+      </div>
+    </div>
+    <div id="simulator-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"></div>
+    <div id="simulator-list" style="display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto"></div>
+  </div>
+
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <h3 style="margin:0">Ultimi movimenti</h3>
@@ -154,6 +197,17 @@ tr:hover td{background:#fafafa}
     <i class="ti ti-search"></i>
     <input type="search" id="mov-search" placeholder="Cerca per importo, data (gg/mm/aaaa) o descrizione..." oninput="renderMovimenti()">
     <button onclick="document.getElementById('mov-search').value='';renderMovimenti()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:0;line-height:1">×</button>
+  </div>
+  <div id="mov-totals" style="display:none;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div style="font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Totali movimenti filtrati</div>
+      <div style="font-size:12px;opacity:.85" id="mov-totals-count"></div>
+    </div>
+    <div style="display:flex;gap:32px;margin-top:8px;flex-wrap:wrap">
+      <div><div style="font-size:11px;opacity:.8">Entrate</div><div style="font-size:20px;font-weight:700" id="mov-tot-ent">€0</div></div>
+      <div><div style="font-size:11px;opacity:.8">Uscite</div><div style="font-size:20px;font-weight:700" id="mov-tot-usc">€0</div></div>
+      <div><div style="font-size:11px;opacity:.8">Saldo</div><div style="font-size:20px;font-weight:700" id="mov-tot-saldo">€0</div></div>
+    </div>
   </div>
   <div class="card" style="margin-bottom:16px">
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
@@ -198,7 +252,7 @@ tr:hover td{background:#fafafa}
     </div>
     <div class="charts-row" style="margin-bottom:20px">
       <div class="card"><h3>Accumulo mensile</h3><div style="position:relative;width:100%;height:220px"><canvas id="secondoBarChart"></canvas></div></div>
-      <div class="card"><h3>Per obiettivo</h3><div style="position:relative;width:100%;height:180px"><canvas id="secondoPieChart"></canvas></div><div class="legend-row" id="secondo-pie-legend"></div></div>
+      <div class="card"><h3>Per obiettivo</h3><div style="position:relative;width:100%;height:180px"><canvas id="secondoPieChart"></canvas></div><div id="secondo-pie-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:var(--muted)"></div></div>
     </div>
     <div class="card">
       <h3>Movimenti di accumulo</h3>
@@ -207,7 +261,7 @@ tr:hover td{background:#fafafa}
     </div>
   </div>
   <div id="secondo-obiettivi" style="display:none">
-    <div id="obiettivi-summary" style="display:none;background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%);color:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 4px 12px rgba(124,58,237,.2)">
+    <div id="obiettivi-summary" style="display:none;background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%);color:#fff;border-radius:12px;padding:20px;margin-bottom:16px">
       <div style="font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Totale versato verso obiettivi</div>
       <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
         <div style="font-size:32px;font-weight:700" id="obs-totale">€0</div>
@@ -308,6 +362,7 @@ tr:hover td{background:#fafafa}
       <div class="form-group"><label>Già accumulato (€)</label><input type="number" id="goal-current" step="0.01" min="0" value="0"></div>
       <div class="form-group"><label>Scadenza</label><input type="date" id="goal-deadline"></div>
       <div class="form-group"><label>Note</label><input type="text" id="goal-note"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Speso (giorno per giorno) (€)</label><input type="number" id="goal-spent" step="0.01" min="0" value="0" placeholder="Soldi già spesi dall'obiettivo"></div>
     </div>
     <div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-goal')">Annulla</button><button class="btn btn-primary" onclick="saveGoal()">Salva</button></div>
   </div>
@@ -347,18 +402,19 @@ const SUPABASE_URL='https://scuekneokzmjmbgnwzzj.supabase.co';
 const SUPABASE_KEY='sb_publishable_T3gPMGCoDpc-I1xSDiIsyQ_ZRS85xpI';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-// ── State ─────────────────────────────────────────────────────────────
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const COLORS=['#4f46e5','#16a34a','#dc2626','#d97706','#0891b2','#7c3aed','#db2777','#059669','#ea580c','#2563eb','#84cc16','#f43f5e'];
 const CORE_PAGES=[{id:'dashboard',icon:'ti-layout-dashboard',label:'Dashboard'},{id:'movimenti',icon:'ti-plus-circle',label:'Movimenti'},{id:'secondo',icon:'ti-building-bank',label:'2° Conto'},{id:'budget',icon:'ti-chart-pie',label:'Budget'},{id:'impostazioni',icon:'ti-settings',label:'Impostazioni'}];
 
 let data={movimenti:[],categorie:[],obiettivi:[],budgetMensile:[],budgetAnnuale:[],navLabels:{}};
-let currentPeriod='annual',pieSide='uscite',budgetTab='mensile',secondoTab='resoconto';
+let currentPeriod='annual',pieSide='uscite',pieFormat='pct',budgetTab='mensile',secondoTab='resoconto';
+let simPeriod='month',simAdjustments={};
 let editMovId=null,editGoalId=null;
 let pieChart=null,barChart=null,sBarChart=null,sPieChart=null;
 const now=new Date();
 
 const fmt=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n);
+const fmtShort=n=>'€'+Math.round(n).toLocaleString('it-IT');
 const catById=id=>data.categorie.find(c=>c.id===id);
 const dStr=d=>{const t=new Date(d+'T00:00:00');return `${String(t.getDate()).padStart(2,'0')}/${String(t.getMonth()+1).padStart(2,'0')}/${t.getFullYear()}`;};
 const closeModal=id=>document.getElementById(id).classList.remove('open');
@@ -369,7 +425,20 @@ function showToast(msg,err=false){
 }
 function loading(show){document.getElementById('loading-overlay').style.display=show?'flex':'none';}
 
-// ── LOAD ALL DATA ────────────────────────────────────────────────────
+// ── CLOCK ─────────────────────────────────────────────────────────────
+function updateClock(){
+  const d=new Date();
+  const weekdays=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  const wd=weekdays[d.getDay()];
+  const day=String(d.getDate()).padStart(2,'0');
+  const mo=MONTHS[d.getMonth()].slice(0,3);
+  const hr=String(d.getHours()).padStart(2,'0');
+  const min=String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('clock-text').textContent=`${wd} ${day} ${mo} · ${hr}:${min}`;
+}
+setInterval(updateClock,1000);updateClock();
+
+// ── LOAD ─────────────────────────────────────────────────────────────
 async function loadAll(){
   loading(true);
   try{
@@ -386,15 +455,10 @@ async function loadAll(){
     data.obiettivi=obis.data||[];
     data.budgetMensile=bm.data||[];
     data.budgetAnnuale=ba.data||[];
-    // parse nav labels
     const nl=impost.data?.find(r=>r.chiave==='nav_labels');
     data.navLabels=nl?JSON.parse(nl.valore):{};
   }catch(e){showToast('Errore caricamento dati',true);}
   loading(false);
-}
-
-async function saveNavLabels(){
-  await sb.from('impostazioni').upsert({chiave:'nav_labels',valore:JSON.stringify(data.navLabels)},{onConflict:'chiave'});
 }
 
 // ── NAV ──────────────────────────────────────────────────────────────
@@ -402,7 +466,6 @@ document.getElementById('main-nav').addEventListener('click',e=>{
   const btn=e.target.closest('.nav-btn');if(!btn)return;
   showPage(btn.dataset.page);
 });
-
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -410,9 +473,7 @@ function showPage(id){
   document.getElementById('nav-'+id)?.classList.add('active');
   ({dashboard:renderDashboard,movimenti:renderMovimenti,secondo:renderSecondo,budget:renderBudget,impostazioni:renderImpostazioni})[id]?.();
 }
-
 function renderImpostazioni(){renderNavLabels();renderCategorie();}
-
 function renderNavLabels(){
   const c=document.getElementById('nav-labels-list');
   c.innerHTML=CORE_PAGES.map(p=>{
@@ -426,7 +487,6 @@ function renderNavLabels(){
     </div>`;
   }).join('');
 }
-
 function updateNavBtn(pid,label){
   const nb=document.getElementById('nav-'+pid);
   if(nb){const sp=nb.querySelector('span');if(sp)sp.textContent=label;}
@@ -446,6 +506,7 @@ function populateYears(ids){
 // ── DASHBOARD ────────────────────────────────────────────────────────
 function setPeriod(p){currentPeriod=p;document.getElementById('seg-annual').classList.toggle('active',p==='annual');document.getElementById('seg-month').classList.toggle('active',p==='month');document.getElementById('month-select').style.display=p==='month'?'block':'none';renderDashboard();}
 function setPieSide(s){pieSide=s;document.getElementById('pie-seg-usc').classList.toggle('active',s==='uscite');document.getElementById('pie-seg-ent').classList.toggle('active',s==='entrate');renderDashboard();}
+function setPieFormat(f){pieFormat=f;document.getElementById('pie-fmt-pct').classList.toggle('active',f==='pct');document.getElementById('pie-fmt-eur').classList.toggle('active',f==='eur');renderDashboard();}
 
 function getMainMovs(){
   const yr=parseInt(document.getElementById('year-select').value||now.getFullYear());
@@ -470,18 +531,32 @@ function renderDashboard(){
   document.getElementById('kpi-saldo').textContent=fmt(sal);
   document.getElementById('kpi-saldo').className='kpi-value '+(sal>=0?'kpi-blue':'kpi-red');
   document.getElementById('kpi-savings').textContent=sav.toFixed(1)+'%';
+
+  // PIE
   const side=pieSide==='uscite'?'uscita':'entrata';
   const bc={};movs.filter(m=>m.tipologia===side).forEach(m=>{bc[m.categoria]=(bc[m.categoria]||0)+Number(m.importo);});
-  const ids=Object.keys(bc),lbls=ids.map(id=>(catById(id)||{nome:id}).nome),vals=ids.map(id=>bc[id]),cols=ids.map((id,i)=>(catById(id)||{colore:COLORS[i%12]}).colore);
+  // ordina per importo desc
+  const sorted=Object.entries(bc).sort((a,b)=>b[1]-a[1]);
+  const ids=sorted.map(s=>s[0]);
+  const lbls=ids.map(id=>(catById(id)||{nome:id}).nome);
+  const vals=sorted.map(s=>s[1]);
+  const cols=ids.map((id,i)=>(catById(id)||{colore:COLORS[i%12]}).colore);
   if(pieChart)pieChart.destroy();
   pieChart=new Chart(document.getElementById('pieChart').getContext('2d'),{type:'doughnut',data:{labels:lbls,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)}`}}}}});
   const tot=vals.reduce((s,v)=>s+v,0);
-  document.getElementById('pie-legend').innerHTML=lbls.map((l,i)=>`<span class="legend-item"><span class="legend-dot" style="background:${cols[i]}"></span>${l} ${tot>0?(vals[i]/tot*100).toFixed(1)+'%':''}</span>`).join('');
+  document.getElementById('pie-legend').innerHTML=lbls.length?lbls.map((l,i)=>{
+    const valStr=pieFormat==='pct'?(tot>0?(vals[i]/tot*100).toFixed(1)+'%':'0%'):fmt(vals[i]);
+    return `<div class="legend-item"><span class="legend-dot" style="background:${cols[i]}"></span><span class="legend-name">${l}</span><span class="legend-val">${valStr}</span></div>`;
+  }).join(''):'<div style="color:var(--muted);font-size:12px;padding:8px">Nessun dato</div>';
+
+  // BAR
   const yr=parseInt(document.getElementById('year-select').value||now.getFullYear());
   const bm=Array(12).fill(0).map(()=>({e:0,u:0}));
   data.movimenti.filter(m=>new Date(m.data+'T00:00:00').getFullYear()===yr&&m.tipo!=='accumulo').forEach(m=>{const mo=new Date(m.data+'T00:00:00').getMonth();if(m.tipologia==='entrata')bm[mo].e+=Number(m.importo);else bm[mo].u+=Number(m.importo);});
   if(barChart)barChart.destroy();
   barChart=new Chart(document.getElementById('barChart').getContext('2d'),{type:'bar',data:{labels:MONTHS.map(m=>m.slice(0,3)),datasets:[{label:'Entrate',data:bm.map(m=>m.e),backgroundColor:'rgba(22,163,74,0.7)',borderRadius:4},{label:'Uscite',data:bm.map(m=>m.u),backgroundColor:'rgba(220,38,38,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'€'+v.toLocaleString('it-IT')}}}}});
+
+  renderSimulator();
   renderRecent();
 }
 
@@ -494,6 +569,79 @@ function renderRecent(){
   document.getElementById('recent-body').innerHTML=movs.length?movs.map(m=>{const c=catById(m.categoria);return `<tr><td>${dStr(m.data)}</td><td>${c?`<span style="display:inline-flex;align-items:center;gap:5px"><span class="dot" style="background:${c.colore}"></span>${c.nome}</span>`:'—'}</td><td>${m.descrizione||'—'}</td><td><span class="badge ${TB[m.tipo]||'badge-blue'}">${TL[m.tipo]||m.tipo}</span></td><td style="text-align:right;font-weight:600;color:${m.tipologia==='entrata'?'#16a34a':'#dc2626'}">${m.tipologia==='entrata'?'+':'−'}${fmt(m.importo)}</td></tr>`;}).join(''):'<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px">Nessun movimento</td></tr>';
 }
 
+// ── SIMULATORE ────────────────────────────────────────────────────────
+function setSimPeriod(p){
+  simPeriod=p;
+  document.getElementById('sim-period-month').classList.toggle('active',p==='month');
+  document.getElementById('sim-period-year').classList.toggle('active',p==='year');
+  simAdjustments={};
+  renderSimulator();
+}
+function resetSimulator(){simAdjustments={};renderSimulator();}
+
+function renderSimulator(){
+  const yr=now.getFullYear(),mo=now.getMonth();
+  // Calcola spese/entrate attuali per categoria
+  const moMovs=data.movimenti.filter(m=>{const d=new Date(m.data+'T00:00:00');return d.getFullYear()===yr&&m.tipo!=='accumulo'&&(simPeriod==='year'||d.getMonth()===mo);});
+  // Aggregate per categoria
+  const byCat={};
+  moMovs.forEach(m=>{
+    if(!byCat[m.categoria])byCat[m.categoria]={cat:catById(m.categoria),current:0,tipologia:m.tipologia};
+    byCat[m.categoria].current+=Number(m.importo);
+  });
+
+  // Calcola fattore di proiezione (giorni passati / giorni totali)
+  let factor=1;
+  if(simPeriod==='month'){
+    const today=now.getDate();
+    const daysInMonth=new Date(yr,mo+1,0).getDate();
+    factor=daysInMonth/today;
+  } else {
+    const start=new Date(yr,0,1);
+    const dayOfYear=Math.floor((now-start)/(1000*60*60*24))+1;
+    factor=365/dayOfYear;
+  }
+
+  // Calcola proiezioni e applica aggiustamenti
+  let totEnt=0,totUsc=0;
+  const rows=Object.values(byCat).map(item=>{
+    if(!item.cat)return null;
+    const projected=item.current*factor;
+    const adjust=simAdjustments[item.cat.id]!==undefined?simAdjustments[item.cat.id]:projected;
+    if(item.tipologia==='entrata')totEnt+=adjust;else totUsc+=adjust;
+    return {...item,projected,adjusted:adjust};
+  }).filter(Boolean);
+
+  // Render summary
+  const saldo=totEnt-totUsc;
+  document.getElementById('simulator-summary').innerHTML=`
+    <div class="sim-summary-card"><div class="sim-summary-label">Entrate proiettate</div><div class="sim-summary-val" style="color:var(--green)">${fmt(totEnt)}</div></div>
+    <div class="sim-summary-card"><div class="sim-summary-label">Uscite proiettate</div><div class="sim-summary-val" style="color:var(--red)">${fmt(totUsc)}</div></div>
+    <div class="sim-summary-card"><div class="sim-summary-label">Saldo proiettato</div><div class="sim-summary-val" style="color:${saldo>=0?'var(--accent)':'var(--red)'}">${fmt(saldo)}</div></div>
+  `;
+
+  // Render rows - ordinati per importo proiettato desc
+  rows.sort((a,b)=>b.projected-a.projected);
+  document.getElementById('simulator-list').innerHTML=rows.length?rows.map(r=>{
+    const max=Math.max(r.projected*2.5,100);
+    return `<div class="sim-row">
+      <div class="sim-cat"><span class="dot" style="background:${r.cat.colore}"></span>${r.cat.nome}</div>
+      <div>
+        <input type="range" class="sim-slider" min="0" max="${max}" step="1" value="${r.adjusted}" data-cat="${r.cat.id}" oninput="onSimSlide(this)">
+        <div class="sim-current">Attuale: ${fmt(r.current)} · Proiezione: ${fmt(r.projected)}</div>
+      </div>
+      <div class="sim-proj" style="color:${r.tipologia==='entrata'?'var(--green)':'var(--red)'}">${fmt(r.adjusted)}</div>
+      <div style="font-size:11px;text-align:right;color:${r.adjusted>r.projected?'var(--red)':r.adjusted<r.projected?'var(--green)':'var(--muted)'}">${r.projected>0?((r.adjusted-r.projected)/r.projected*100).toFixed(0)+'%':'—'}</div>
+    </div>`;
+  }).join(''):'<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px">Nessuna spesa per il periodo selezionato</div>';
+}
+
+function onSimSlide(input){
+  const cid=input.dataset.cat;
+  simAdjustments[cid]=parseFloat(input.value);
+  renderSimulator();
+}
+
 // ── MOVIMENTI ────────────────────────────────────────────────────────
 function renderMovimenti(){
   populateYears();
@@ -501,12 +649,27 @@ function renderMovimenti(){
   const fM=document.getElementById('filter-month').value,fT=document.getElementById('filter-tipo').value,fTM=document.getElementById('filter-tipo-mov').value;
   const cf=document.getElementById('filter-cat');const cv=cf.value;
   cf.innerHTML='<option value="">Tutte</option>'+data.categorie.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');cf.value=cv;const fC=cf.value;
+
   let movs=[...data.movimenti].sort((a,b)=>new Date(b.data)-new Date(a.data));
   if(fM!=='')movs=movs.filter(m=>new Date(m.data+'T00:00:00').getMonth()===parseInt(fM));
   if(fT)movs=movs.filter(m=>m.tipologia===fT);
   if(fC)movs=movs.filter(m=>m.categoria===fC);
   if(fTM)movs=movs.filter(m=>m.tipo===fTM);
   if(q)movs=movs.filter(m=>(m.descrizione||'').toLowerCase().includes(q)||String(m.importo).includes(q)||dStr(m.data).includes(q)||(catById(m.categoria)||{nome:''}).nome.toLowerCase().includes(q));
+
+  // Mostra totali se almeno un filtro è attivo o c'è una ricerca
+  const hasFilter=q||fM!==''||fT||fC||fTM;
+  const totBox=document.getElementById('mov-totals');
+  if(hasFilter&&movs.length){
+    const tEnt=movs.filter(m=>m.tipologia==='entrata').reduce((s,m)=>s+Number(m.importo),0);
+    const tUsc=movs.filter(m=>m.tipologia==='uscita').reduce((s,m)=>s+Number(m.importo),0);
+    document.getElementById('mov-tot-ent').textContent=fmt(tEnt);
+    document.getElementById('mov-tot-usc').textContent=fmt(tUsc);
+    document.getElementById('mov-tot-saldo').textContent=fmt(tEnt-tUsc);
+    document.getElementById('mov-totals-count').textContent=`${movs.length} movimenti`;
+    totBox.style.display='block';
+  } else totBox.style.display='none';
+
   const tbody=document.getElementById('mov-body');const empty=document.getElementById('mov-empty');
   if(!movs.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';
   const TL={entrata:'Entrata',uscita_fissa:'Uscita Fissa',uscita_variabile:'Uscita Var.',accumulo:'Accumulo 2°'};
@@ -526,7 +689,6 @@ function openMov(id){
   updateMovTipo();
   document.getElementById('modal-mov').classList.add('open');
 }
-
 function updateMovForm(selCat,selObj){
   const tipol=document.getElementById('mov-tipologia').value;
   const cats=data.categorie.filter(c=>c.tipo===tipol||c.tipo==='entrambi');
@@ -551,7 +713,6 @@ async function saveMov(){
   else data.movimenti.unshift(mov);
   loading(false);closeModal('modal-mov');showToast('Movimento salvato ✓');renderMovimenti();
 }
-
 async function deleteMov(id){
   if(!confirm('Eliminare questo movimento?'))return;
   loading(true);
@@ -597,10 +758,8 @@ function renderSecondo(){
 function renderGoals(){
   const grid=document.getElementById('goals-grid');const empty=document.getElementById('goals-empty');
   const summary=document.getElementById('obiettivi-summary');
-  if(!data.obiettivi.length){grid.innerHTML='';empty.style.display='block';summary.style.display='none';return;}
-  empty.style.display='none';
+  if(!data.obiettivi.length){grid.innerHTML='';empty.style.display='block';summary.style.display='none';return;}empty.style.display='none';
 
-  // Calcola totale e dettaglio per riassunto
   const perObj=data.obiettivi.map(g=>{
     const acc=data.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id===g.id).reduce((s,m)=>s+Number(m.importo),0);
     const accTot=Math.max(Number(g.accumulato_base)||0,acc);
@@ -614,8 +773,13 @@ function renderGoals(){
 
   grid.innerHTML=data.obiettivi.map(g=>{
     const accM=data.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id===g.id).reduce((s,m)=>s+Number(m.importo),0);
-    const acc=Math.max(Number(g.accumulato_base)||0,accM);const pct=Math.min(acc/Number(g.target)*100,100);
-    // Calcola giorni rimanenti se c'è scadenza
+    const acc=Math.max(Number(g.accumulato_base)||0,accM);
+    const target=Number(g.target);
+    const speso=Number(g.speso)||0;
+    const rimanente=Math.max(acc-speso,0);
+    const pctAccumulo=Math.min(acc/target*100,100);
+    const pctSpeso=acc>0?Math.min(speso/acc*100,100):0;
+
     let scadenzaInfo='';
     if(g.scadenza){
       const oggi=new Date();oggi.setHours(0,0,0,0);
@@ -625,6 +789,7 @@ function renderGoals(){
       const testo=giorni<0?`Scaduto da ${Math.abs(giorni)}g`:giorni===0?'Scade oggi':giorni===1?'Scade domani':`Mancano ${giorni} giorni`;
       scadenzaInfo=`<div style="display:flex;align-items:center;gap:6px;font-size:12px;margin-top:4px"><i class="ti ti-calendar-event" style="color:${colore};font-size:14px"></i><span style="color:${colore};font-weight:500">${dStr(g.scadenza)}</span><span style="color:#9ca3af">·</span><span style="color:${colore};font-weight:500">${testo}</span></div>`;
     }
+
     return `<div class="goal-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="flex:1;min-width:0">
@@ -636,15 +801,28 @@ function renderGoals(){
           <button class="btn btn-sm btn-danger" data-action="del-goal" data-id="${g.id}"><i class="ti ti-trash"></i></button>
         </div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
-        <span>Accumulato: <strong style="color:#7c3aed">${fmt(acc)}</strong></span>
-        <span>Target: <strong>${fmt(g.target)}</strong></span>
+
+      <!-- Barra 1: Accumulo verso target -->
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:#7c3aed;font-weight:600">Accumulo</span>
+        <span><strong style="color:#7c3aed">${fmt(acc)}</strong> / ${fmt(target)}</span>
       </div>
-      <div class="progress-bar" style="height:12px;margin-bottom:6px"><div class="progress-fill" style="width:${pct}%;background:#7c3aed"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280">
-        <span>${pct.toFixed(1)}% completato</span><span>Mancano ${fmt(Math.max(Number(g.target)-acc,0))}</span>
+      <div class="progress-bar" style="height:10px;margin-bottom:4px"><div class="progress-fill" style="width:${pctAccumulo}%;background:#7c3aed"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:10px">
+        <span>${pctAccumulo.toFixed(1)}% del target</span><span>Mancano ${fmt(Math.max(target-acc,0))}</span>
       </div>
-      ${g.note?`<div style="font-size:12px;color:#9ca3af;margin-top:8px;border-top:1px solid #f3f4f6;padding-top:8px">${g.note}</div>`:''}
+
+      <!-- Barra 2: Speso dell'accumulato -->
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:#ea580c;font-weight:600">Spesa progressiva</span>
+        <span><strong style="color:#ea580c">${fmt(speso)}</strong> / ${fmt(acc)}</span>
+      </div>
+      <div class="progress-bar" style="height:10px;margin-bottom:4px;background:#fef3c7"><div class="progress-fill" style="width:${pctSpeso}%;background:#ea580c"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280">
+        <span>${pctSpeso.toFixed(1)}% speso</span><span>Disponibile: <strong style="color:#16a34a">${fmt(rimanente)}</strong></span>
+      </div>
+
+      ${g.note?`<div style="font-size:12px;color:#9ca3af;margin-top:10px;border-top:1px solid #f3f4f6;padding-top:8px">${g.note}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -654,16 +832,25 @@ function openGoal(id){
   document.getElementById('modal-goal-title').textContent=id?'Modifica Obiettivo':'Nuovo Obiettivo';
   document.getElementById('goal-name').value=g?g.nome:'';document.getElementById('goal-target').value=g?g.target:'';
   document.getElementById('goal-current').value=g?g.accumulato_base||0:0;document.getElementById('goal-deadline').value=g?g.scadenza||'':'';document.getElementById('goal-note').value=g?g.note||'':'';
+  document.getElementById('goal-spent').value=g?g.speso||0:0;
   document.getElementById('modal-goal').classList.add('open');
 }
 
 async function saveGoal(){
   const nome=document.getElementById('goal-name').value.trim();if(!nome)return alert('Inserisci un nome');
   const target=parseFloat(document.getElementById('goal-target').value);if(!target||target<=0)return alert('Importo target non valido');
-  const goal={id:editGoalId||'g'+Date.now(),nome,target,accumulato_base:parseFloat(document.getElementById('goal-current').value)||0,scadenza:document.getElementById('goal-deadline').value||null,note:document.getElementById('goal-note').value.trim()||null};
+  const goal={
+    id:editGoalId||'g'+Date.now(),
+    nome,
+    target,
+    accumulato_base:parseFloat(document.getElementById('goal-current').value)||0,
+    scadenza:document.getElementById('goal-deadline').value||null,
+    note:document.getElementById('goal-note').value.trim()||null,
+    speso:parseFloat(document.getElementById('goal-spent').value)||0
+  };
   loading(true);
   const {error}=await sb.from('obiettivi').upsert(goal,{onConflict:'id'});
-  if(error){showToast('Errore salvataggio',true);loading(false);return;}
+  if(error){showToast('Errore salvataggio (la colonna "speso" potrebbe non esistere ancora — vedi messaggio nella chat)',true);loading(false);return;}
   if(editGoalId){const i=data.obiettivi.findIndex(g=>g.id===editGoalId);data.obiettivi[i]=goal;}else data.obiettivi.push(goal);
   loading(false);closeModal('modal-goal');showToast('Obiettivo salvato ✓');renderGoals();
 }
@@ -707,13 +894,19 @@ function openBudgetEdit(){
   if(budgetTab==='mensile'){
     const mo=parseInt(document.getElementById('budget-month-sel').value),yr=parseInt(document.getElementById('budget-year-sel').value||now.getFullYear());
     document.getElementById('modal-budget-title').textContent='Budget Mensile — '+MONTHS[mo]+' '+yr;
-    document.getElementById('modal-budget-desc').textContent='Imposta il budget per ogni categoria.';
-    document.getElementById('budget-form-list').innerHTML=cats.map(cat=>{const b=data.budgetMensile.find(r=>r.anno===yr&&r.mese===mo&&r.categoria_id===cat.id);return `<div style="display:flex;align-items:center;gap:12px"><span style="flex:1;font-size:13px;font-weight:500"><span class="dot" style="background:${cat.colore};margin-right:6px"></span>${cat.nome}</span><input type="number" step="0.01" min="0" placeholder="€" value="${b?b.importo:''}" data-cat="${cat.id}" style="width:120px"></div>`;}).join('');
+    document.getElementById('modal-budget-desc').textContent='Lascia vuoto o premi "Azzera" per rimuovere il budget di una categoria.';
+    document.getElementById('budget-form-list').innerHTML=cats.map(cat=>{
+      const b=data.budgetMensile.find(r=>r.anno===yr&&r.mese===mo&&r.categoria_id===cat.id);
+      return `<div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:13px;font-weight:500"><span class="dot" style="background:${cat.colore};margin-right:6px"></span>${cat.nome}</span><input type="number" step="0.01" min="0" placeholder="€ (lascia vuoto per azzerare)" value="${b?b.importo:''}" data-cat="${cat.id}" style="width:160px"><button class="btn btn-ghost btn-sm" data-action="reset-budget-input">Azzera</button></div>`;
+    }).join('');
   } else {
     const yr=parseInt(document.getElementById('budget-annual-year-sel').value||now.getFullYear());
     document.getElementById('modal-budget-title').textContent='Budget Annuale — '+yr;
-    document.getElementById('modal-budget-desc').textContent='Imposta il budget annuale per ogni categoria.';
-    document.getElementById('budget-form-list').innerHTML=cats.map(cat=>{const b=data.budgetAnnuale.find(r=>r.anno===yr&&r.categoria_id===cat.id);return `<div style="display:flex;align-items:center;gap:12px"><span style="flex:1;font-size:13px;font-weight:500"><span class="dot" style="background:${cat.colore};margin-right:6px"></span>${cat.nome}</span><input type="number" step="0.01" min="0" placeholder="€" value="${b?b.importo:''}" data-cat="${cat.id}" style="width:120px"></div>`;}).join('');
+    document.getElementById('modal-budget-desc').textContent='Lascia vuoto o premi "Azzera" per rimuovere il budget di una categoria.';
+    document.getElementById('budget-form-list').innerHTML=cats.map(cat=>{
+      const b=data.budgetAnnuale.find(r=>r.anno===yr&&r.categoria_id===cat.id);
+      return `<div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:13px;font-weight:500"><span class="dot" style="background:${cat.colore};margin-right:6px"></span>${cat.nome}</span><input type="number" step="0.01" min="0" placeholder="€ (lascia vuoto per azzerare)" value="${b?b.importo:''}" data-cat="${cat.id}" style="width:160px"><button class="btn btn-ghost btn-sm" data-action="reset-budget-input">Azzera</button></div>`;
+    }).join('');
   }
   document.getElementById('modal-budget').classList.add('open');
 }
@@ -722,22 +915,30 @@ async function saveBudget(){
   loading(true);
   if(budgetTab==='mensile'){
     const mo=parseInt(document.getElementById('budget-month-sel').value),yr=parseInt(document.getElementById('budget-year-sel').value||now.getFullYear());
-    const upserts=[];
+    const upserts=[],deletes=[];
     document.querySelectorAll('#budget-form-list input').forEach(inp=>{
       const v=parseFloat(inp.value);
       if(v>0)upserts.push({anno:yr,mese:mo,categoria_id:inp.dataset.cat,importo:v});
+      else deletes.push(inp.dataset.cat);
     });
-    await sb.from('budget_mensile').upsert(upserts,{onConflict:'anno,mese,categoria_id'});
-    // reload
+    if(upserts.length)await sb.from('budget_mensile').upsert(upserts,{onConflict:'anno,mese,categoria_id'});
+    // delete those without value
+    for(const cid of deletes){
+      await sb.from('budget_mensile').delete().match({anno:yr,mese:mo,categoria_id:cid});
+    }
     const {data:bm}=await sb.from('budget_mensile').select('*');data.budgetMensile=bm||[];
   } else {
     const yr=parseInt(document.getElementById('budget-annual-year-sel').value||now.getFullYear());
-    const upserts=[];
+    const upserts=[],deletes=[];
     document.querySelectorAll('#budget-form-list input').forEach(inp=>{
       const v=parseFloat(inp.value);
       if(v>0)upserts.push({anno:yr,categoria_id:inp.dataset.cat,importo:v});
+      else deletes.push(inp.dataset.cat);
     });
-    await sb.from('budget_annuale').upsert(upserts,{onConflict:'anno,categoria_id'});
+    if(upserts.length)await sb.from('budget_annuale').upsert(upserts,{onConflict:'anno,categoria_id'});
+    for(const cid of deletes){
+      await sb.from('budget_annuale').delete().match({anno:yr,categoria_id:cid});
+    }
     const {data:ba}=await sb.from('budget_annuale').select('*');data.budgetAnnuale=ba||[];
   }
   loading(false);closeModal('modal-budget');showToast('Budget salvato ✓');renderBudget();
@@ -749,7 +950,6 @@ function renderCategorie(){
   const rg=(lbl,cats)=>cats.length?`<div class="section-divider">${lbl}</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${cats.map(c=>`<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--muted-light);border:1px solid var(--border);border-radius:20px;font-size:13px"><span class="dot" style="background:${c.colore}"></span>${c.nome}<button data-action="edit-cat" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;font-size:12px"><i class="ti ti-edit"></i></button><button data-action="del-cat" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:0;font-size:14px">×</button></span>`).join('')}</div>`:'';
   document.getElementById('cat-list').innerHTML=rg('Entrate',groups.entrata)+rg('Uscite',groups.uscita)+rg('Entrambi',groups.entrambi);
 }
-
 async function addCategory(){
   const nome=document.getElementById('new-cat-name').value.trim();if(!nome)return alert('Inserisci un nome');
   if(data.categorie.find(c=>c.nome.toLowerCase()===nome.toLowerCase()))return alert('Categoria già esistente');
@@ -760,9 +960,7 @@ async function addCategory(){
   data.categorie.push(cat);data.categorie.sort((a,b)=>a.nome.localeCompare(b.nome));
   document.getElementById('new-cat-name').value='';loading(false);showToast('Categoria aggiunta ✓');renderCategorie();
 }
-
 function openEditCat(id){const c=data.categorie.find(x=>x.id===id);if(!c)return;document.getElementById('edit-cat-id').value=id;document.getElementById('edit-cat-name').value=c.nome;document.getElementById('edit-cat-tipo').value=c.tipo;document.getElementById('edit-cat-color').value=c.colore;document.getElementById('modal-cat').classList.add('open');}
-
 async function saveEditCat(){
   const id=document.getElementById('edit-cat-id').value,i=data.categorie.findIndex(c=>c.id===id);if(i<0)return;
   const nome=document.getElementById('edit-cat-name').value.trim();if(!nome)return alert('Inserisci un nome');
@@ -772,7 +970,6 @@ async function saveEditCat(){
   if(error){showToast('Errore salvataggio',true);loading(false);return;}
   data.categorie[i]=updated;loading(false);closeModal('modal-cat');showToast('Categoria aggiornata ✓');renderCategorie();
 }
-
 async function deleteCat(id){
   if(data.movimenti.some(m=>m.categoria===id))return alert('Categoria in uso: non eliminabile.');
   loading(true);
@@ -800,7 +997,6 @@ function generatePdf(){
   closeModal('modal-pdf');
 }
 
-// ── Export JSON ───────────────────────────────────────────────────────
 function exportData(){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='finanze_'+new Date().toISOString().split('T')[0]+'.json';a.click();}
 
 // ── DELEGATED EVENTS ─────────────────────────────────────────────────
@@ -813,6 +1009,12 @@ document.body.addEventListener('click',async function(e){
   else if(action==='edit-goal')openGoal(id);
   else if(action==='edit-cat')openEditCat(id);
   else if(action==='del-cat')deleteCat(id);
+  else if(action==='reset-budget-input'){
+    const input=btn.closest('div').querySelector('input');
+    input.value='';
+    btn.closest('div').style.opacity='.5';
+    setTimeout(()=>btn.closest('div').style.opacity='1',300);
+  }
   else if(action==='save-nav-label'){
     const pid=btn.dataset.pageId;
     const input=btn.closest('div').querySelector('input');
@@ -838,11 +1040,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 // ── INIT ─────────────────────────────────────────────────────────────
 (async()=>{
   await loadAll();
-  // Apply saved nav labels
-  CORE_PAGES.forEach(p=>{
-    const lbl=data.navLabels[p.id];
-    if(lbl)updateNavBtn(p.id,lbl);
-  });
+  CORE_PAGES.forEach(p=>{const lbl=data.navLabels[p.id];if(lbl)updateNavBtn(p.id,lbl);});
   document.getElementById('month-select').value=now.getMonth();
   document.getElementById('budget-month-sel').value=now.getMonth();
   renderDashboard();
