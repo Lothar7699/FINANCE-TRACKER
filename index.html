@@ -73,16 +73,12 @@ tr:hover td{background:#fafafa}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9998;opacity:0;transform:translateY(8px);transition:all .3s}
 .toast.show{opacity:1;transform:translateY(0)}
-/* PIE LEGEND */
 .pie-ld{width:10px;height:10px;border-radius:2px;flex-shrink:0;display:inline-block}
-/* SIMULATOR */
 .sim-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
 .sim-sc{background:var(--muted-light);border-radius:10px;padding:12px;text-align:center}
 .sim-sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;font-weight:600}
 .sim-sv{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
-.sim-row{display:grid;grid-template-columns:190px 60px 1fr 130px 32px;gap:8px;align-items:center;padding:9px 11px;border-radius:9px;background:var(--muted-light);margin-bottom:5px;font-size:13px}
-.sim-cat{display:flex;align-items:center;gap:7px;font-weight:500;min-width:0;overflow:hidden}
-.sim-cat-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sim-row{display:grid;grid-template-columns:180px 60px 1fr 145px 32px;gap:8px;align-items:center;padding:9px 11px;border-radius:9px;background:var(--muted-light);margin-bottom:5px;font-size:13px}
 .sim-slider{width:100%;-webkit-appearance:none;appearance:none;background:transparent;cursor:grab}
 .sim-slider:active{cursor:grabbing}
 .sim-slider.locked{opacity:.4;pointer-events:none}
@@ -90,16 +86,17 @@ tr:hover td{background:#fafafa}
 .sim-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);margin-top:-7px;border:3px solid #fff;box-shadow:0 2px 6px rgba(79,70,229,.3);cursor:grab}
 .sim-slider::-moz-range-track{height:8px;background:#d1d5db;border-radius:4px}
 .sim-slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid #fff;cursor:grab}
-.sim-input{width:80px;text-align:right;font-weight:700;font-size:13px;padding:5px 7px;border:1px solid var(--border);border-radius:7px;font-variant-numeric:tabular-nums}
-.sim-input.locked{background:var(--muted-light);color:var(--muted)}
-.lock-btn{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);flex-shrink:0;padding:0}
+.sim-input{width:78px;text-align:right;font-weight:700;font-size:13px;padding:5px 7px;border:1px solid var(--border);border-radius:7px;font-variant-numeric:tabular-nums}
+.lock-btn{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;padding:0}
 .lock-btn.active{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.freq-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-top:3px}
+.freq-btn{flex:1;padding:2px 6px;border:none;cursor:pointer;font-size:10px;font-weight:600;background:var(--surface);color:var(--muted)}
+.freq-btn.active{background:var(--accent);color:#fff}
 .planner-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px}
 .planner-row:last-child{border:none}
 </style>
 </head>
 <body>
-
 <div id="loading-overlay"><div class="spinner"></div><span>Caricamento dati...</span></div>
 <div class="toast" id="toast"></div>
 
@@ -118,10 +115,13 @@ tr:hover td{background:#fafafa}
 <div class="page active" id="page-dashboard">
   <div class="period-bar">
     <label style="font-size:13px;color:var(--muted);font-weight:500">Visualizza:</label>
-    <div class="seg"><button class="seg-btn active" id="seg-annual" onclick="setPeriod('annual')">Annuale</button><button class="seg-btn" id="seg-month" onclick="setPeriod('month')">Mensile</button></div>
-    <select id="month-select" style="display:none" onchange="renderDashboard()"><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select>
-    <select id="year-select" onchange="renderDashboard()"></select>
-    <button class="btn btn-pdf" onclick="openPdfModal()"><i class="ti ti-file-type-pdf"></i>PDF</button>
+    <div class="seg">
+      <button class="seg-btn active" id="seg-annual" data-action="set-period" data-val="annual">Annuale</button>
+      <button class="seg-btn" id="seg-month" data-action="set-period" data-val="month">Mensile</button>
+    </div>
+    <select id="month-select" style="display:none" data-action="render-dashboard"></select>
+    <select id="year-select" data-action="render-dashboard"></select>
+    <button class="btn btn-pdf" data-action="open-pdf"><i class="ti ti-file-type-pdf"></i>PDF</button>
   </div>
   <div class="kpi-grid">
     <div class="kpi-card"><div class="kpi-label">↑ Entrate</div><div class="kpi-value kpi-green" id="kpi-entrate">€0</div></div>
@@ -134,13 +134,19 @@ tr:hover td{background:#fafafa}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <h3 style="margin:0">Distribuzione</h3>
         <div style="display:flex;gap:6px">
-          <div class="seg"><button class="seg-btn active" id="pie-seg-usc" onclick="setPieSide('uscite')">Uscite</button><button class="seg-btn" id="pie-seg-ent" onclick="setPieSide('entrate')">Entrate</button></div>
-          <div class="seg"><button class="seg-btn active" id="pie-fmt-pct" onclick="setPieFormat('pct')">%</button><button class="seg-btn" id="pie-fmt-eur" onclick="setPieFormat('eur')">€</button></div>
+          <div class="seg">
+            <button class="seg-btn active" id="pie-seg-usc" data-action="set-pie-side" data-val="uscite">Uscite</button>
+            <button class="seg-btn" id="pie-seg-ent" data-action="set-pie-side" data-val="entrate">Entrate</button>
+          </div>
+          <div class="seg">
+            <button class="seg-btn active" id="pie-fmt-pct" data-action="set-pie-fmt" data-val="pct">%</button>
+            <button class="seg-btn" id="pie-fmt-eur" data-action="set-pie-fmt" data-val="eur">€</button>
+          </div>
         </div>
       </div>
       <div style="display:flex;gap:12px;align-items:center;flex:1">
         <div style="flex:1;min-width:0;position:relative">
-          <div id="pie-legend" style="display:flex;flex-direction:column;gap:2px;max-height:240px;overflow-y:auto;padding-right:2px;scrollbar-width:thin"></div>
+          <div id="pie-legend" style="display:flex;flex-direction:column;gap:2px;max-height:240px;overflow-y:auto;scrollbar-width:thin"></div>
           <div id="pie-fade" style="position:absolute;bottom:0;left:0;right:0;height:28px;background:linear-gradient(transparent,white);pointer-events:none;opacity:0;transition:opacity .3s"></div>
         </div>
         <div style="flex-shrink:0;width:230px;height:230px"><canvas id="pieChart"></canvas></div>
@@ -155,43 +161,46 @@ tr:hover td{background:#fafafa}
       <h3 style="margin:0">📈 Simulatore di Budget</h3>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <div class="seg">
-          <button class="seg-btn active" id="sim-period-month" onclick="setSimPeriod('month')">Mensile</button>
-          <button class="seg-btn" id="sim-period-year" onclick="setSimPeriod('year')">Annuale</button>
+          <button class="seg-btn active" id="sim-period-month" data-action="set-sim-period" data-val="month">Mensile</button>
+          <button class="seg-btn" id="sim-period-year" data-action="set-sim-period" data-val="year">Annuale</button>
         </div>
-        <select id="sim-month-sel" onchange="renderSimulator()"><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select>
-        <select id="sim-year-sel" onchange="renderSimulator()"></select>
-        <button class="btn btn-ghost btn-sm" onclick="resetSimulator()"><i class="ti ti-refresh"></i>Reset</button>
-        <button class="btn btn-ghost btn-sm" onclick="saveSimulatorState()"><i class="ti ti-device-floppy"></i>Salva</button>
-        <button class="btn btn-success btn-sm" onclick="applySimulatorToBudget()"><i class="ti ti-check"></i>Aggiorna Budget</button>
+        <select id="sim-month-sel" data-action="render-sim">
+          <option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option>
+        </select>
+        <select id="sim-year-sel" data-action="render-sim"></select>
+        <button class="btn btn-ghost btn-sm" data-action="sim-reset"><i class="ti ti-refresh"></i>Reset</button>
+        <button class="btn btn-ghost btn-sm" data-action="sim-save"><i class="ti ti-device-floppy"></i>Salva</button>
+        <button class="btn btn-success btn-sm" data-action="sim-apply-budget"><i class="ti ti-check"></i>Aggiorna Budget</button>
       </div>
     </div>
     <!-- Riepilogo -->
-    <div id="sim-riepilogo" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;padding:12px;background:var(--muted-light);border-radius:12px"></div>
-    <!-- Tabs -->
+    <div id="sim-riepilogo" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;padding:12px;background:var(--muted-light);border-radius:12px"></div>
+    <!-- Riga entrate fissa -->
+    <div id="sim-entrate-wrap" style="margin-bottom:12px;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px">
+      <div style="font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">↑ Entrate mensili simulabili</div>
+      <div id="sim-entrate-content"></div>
+    </div>
+    <!-- Tab bar -->
     <div class="tab-bar">
-      <button class="tab-btn active" id="sim-tab-fisse" onclick="setSimTab('fisse')">📌 Spese fisse</button>
-      <button class="tab-btn" id="sim-tab-variabili" onclick="setSimTab('variabili')">🎯 Spese variabili</button>
-      <button class="tab-btn" id="sim-tab-obiettivo" onclick="setSimTab('obiettivo')">⭐ Pianifica obiettivo</button>
+      <button class="tab-btn active" id="sim-tab-fisse" data-action="set-sim-tab" data-val="fisse">📌 Spese fisse</button>
+      <button class="tab-btn" id="sim-tab-variabili" data-action="set-sim-tab" data-val="variabili">🎯 Spese variabili</button>
+      <button class="tab-btn" id="sim-tab-obiettivo" data-action="set-sim-tab" data-val="obiettivo">⭐ Pianifica obiettivo</button>
     </div>
     <!-- Fisse -->
     <div id="sim-content-fisse">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:13px;color:var(--muted)">Spese fisse mensili — modifica per simulare scenari futuri.</span>
-        <button class="btn btn-ghost btn-sm" onclick="addSimExtra()"><i class="ti ti-plus"></i>Aggiungi voce</button>
+        <span style="font-size:13px;color:var(--muted)">Spese fisse mensili. Toggle M/A per importo mensile o annuale.</span>
+        <button class="btn btn-ghost btn-sm" data-action="sim-add-extra"><i class="ti ti-plus"></i>Aggiungi voce</button>
       </div>
-      <div style="display:grid;grid-template-columns:190px 60px 1fr 130px 32px;gap:8px;padding:4px 11px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase">
-        <span>Categoria</span><span style="text-align:right">Storico</span><span style="padding-left:4px">Slider</span><span style="text-align:right">/mese · /anno</span><span></span>
-      </div>
+      <div style="display:grid;grid-template-columns:180px 60px 1fr 145px 32px;gap:8px;padding:4px 11px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase"><span>Categoria</span><span style="text-align:right">Storico</span><span style="padding-left:4px">Slider</span><span style="text-align:right">/mese · toggle M/A</span><span></span></div>
       <div id="sim-list-fisse"></div>
       <div id="sim-list-extras"></div>
       <div id="sim-tot-fisse" style="margin-top:10px;padding:10px 14px;background:var(--accent-light);border-radius:8px;display:flex;justify-content:space-between;font-weight:600;font-size:13px"></div>
     </div>
     <!-- Variabili -->
     <div id="sim-content-variabili" style="display:none">
-      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Spese variabili medie — modifica per pianificare i budget.</div>
-      <div style="display:grid;grid-template-columns:190px 60px 1fr 130px 32px;gap:8px;padding:4px 11px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase">
-        <span>Categoria</span><span style="text-align:right">Storico</span><span style="padding-left:4px">Slider</span><span style="text-align:right">/mese · /anno</span><span></span>
-      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Spese variabili medie. Toggle M/A per importo mensile o annuale.</div>
+      <div style="display:grid;grid-template-columns:180px 60px 1fr 145px 32px;gap:8px;padding:4px 11px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase"><span>Categoria</span><span style="text-align:right">Storico</span><span style="padding-left:4px">Slider</span><span style="text-align:right">/mese · toggle M/A</span><span></span></div>
       <div id="sim-list-variabili"></div>
       <div id="sim-tot-variabili" style="margin-top:10px;padding:10px 14px;background:#fef3c7;border-radius:8px;display:flex;justify-content:space-between;font-weight:600;font-size:13px"></div>
     </div>
@@ -199,17 +208,10 @@ tr:hover td{background:#fafafa}
     <div id="sim-content-obiettivo" style="display:none">
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
         <div class="form-group" style="flex:1;min-width:160px"><label>Obiettivo</label><select id="sim-goal-sel"><option value="">— Seleziona —</option></select></div>
-        <div class="form-group"><label>Modalità</label>
-          <select id="sim-goal-mode">
-            <option value="fisso">Risparmio fisso mensile</option>
-            <option value="variabile">Risparmio variabile (sul saldo)</option>
-          </select>
-        </div>
-        <div class="form-group" style="min-width:120px"><label>Entro mese</label>
-          <select id="sim-goal-month"><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select>
-        </div>
+        <div class="form-group"><label>Modalità</label><select id="sim-goal-mode"><option value="fisso">Risparmio fisso</option><option value="variabile">Risparmio variabile</option></select></div>
+        <div class="form-group" style="min-width:120px"><label>Entro mese</label><select id="sim-goal-month"><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select></div>
         <div class="form-group" style="min-width:80px"><label>Anno</label><select id="sim-goal-year"></select></div>
-        <button class="btn btn-primary btn-sm" onclick="runGoalPlanner()"><i class="ti ti-calculator"></i>Calcola</button>
+        <button class="btn btn-primary btn-sm" data-action="run-goal-planner"><i class="ti ti-calculator"></i>Calcola</button>
       </div>
       <div id="goal-planner-result"></div>
     </div>
@@ -220,7 +222,7 @@ tr:hover td{background:#fafafa}
       <h3 style="margin:0">Ultimi movimenti</h3>
       <div style="display:flex;gap:8px;align-items:center">
         <label style="font-size:12px;color:var(--muted)">Categoria:</label>
-        <select id="recent-cat-filter" onchange="renderRecent()" style="font-size:12px;padding:5px 8px"><option value="">Tutte</option></select>
+        <select id="recent-cat-filter" data-action="render-recent" style="font-size:12px;padding:5px 8px"><option value="">Tutte</option></select>
       </div>
     </div>
     <table><thead><tr><th>Data</th><th>Categoria</th><th>Descrizione</th><th>Tipo</th><th style="text-align:right">Importo</th></tr></thead><tbody id="recent-body"></tbody></table>
@@ -229,8 +231,8 @@ tr:hover td{background:#fafafa}
 
 <!-- MOVIMENTI -->
 <div class="page" id="page-movimenti">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2>Movimenti</h2><button class="btn btn-primary" onclick="openMov(null)"><i class="ti ti-plus"></i>Nuovo</button></div>
-  <div class="search-bar"><i class="ti ti-search" style="color:var(--muted)"></i><input type="search" id="mov-search" placeholder="Cerca per importo, data o descrizione..." oninput="renderMovimenti()"><button onclick="document.getElementById('mov-search').value='';renderMovimenti()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px">×</button></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2>Movimenti</h2><button class="btn btn-primary" data-action="open-mov"><i class="ti ti-plus"></i>Nuovo</button></div>
+  <div class="search-bar"><i class="ti ti-search" style="color:var(--muted)"></i><input type="search" id="mov-search" data-action="render-movimenti" placeholder="Cerca per importo, data o descrizione..."><button data-action="clear-search" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px">×</button></div>
   <div id="mov-totals" style="display:none;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:14px">
     <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="font-size:12px;opacity:.9;text-transform:uppercase;font-weight:600">Totali filtrati</span><span style="font-size:12px;opacity:.85" id="mov-totals-count"></span></div>
     <div style="display:flex;gap:32px;margin-top:8px;flex-wrap:wrap">
@@ -241,10 +243,10 @@ tr:hover td{background:#fafafa}
   </div>
   <div class="card" style="margin-bottom:16px">
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-      <div class="form-group" style="min-width:100px"><label>Mese</label><select id="filter-month" onchange="renderMovimenti()"><option value="">Tutti</option><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select></div>
-      <div class="form-group" style="min-width:100px"><label>Tipologia</label><select id="filter-tipo" onchange="renderMovimenti()"><option value="">Tutti</option><option value="entrata">Entrata</option><option value="uscita">Uscita</option></select></div>
-      <div class="form-group" style="min-width:120px"><label>Categoria</label><select id="filter-cat" onchange="renderMovimenti()"><option value="">Tutte</option></select></div>
-      <div class="form-group" style="min-width:130px"><label>Tipo</label><select id="filter-tipo-mov" onchange="renderMovimenti()"><option value="">Tutti</option><option value="entrata">Entrata</option><option value="uscita_fissa">Uscita Fissa</option><option value="uscita_variabile">Uscita Variabile</option><option value="accumulo">Accumulo 2° conto</option></select></div>
+      <div class="form-group" style="min-width:100px"><label>Mese</label><select id="filter-month" data-action="render-movimenti"><option value="">Tutti</option><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select></div>
+      <div class="form-group" style="min-width:100px"><label>Tipologia</label><select id="filter-tipo" data-action="render-movimenti"><option value="">Tutti</option><option value="entrata">Entrata</option><option value="uscita">Uscita</option></select></div>
+      <div class="form-group" style="min-width:120px"><label>Categoria</label><select id="filter-cat" data-action="render-movimenti"><option value="">Tutte</option></select></div>
+      <div class="form-group" style="min-width:130px"><label>Tipo</label><select id="filter-tipo-mov" data-action="render-movimenti"><option value="">Tutti</option><option value="entrata">Entrata</option><option value="uscita_fissa">Uscita Fissa</option><option value="uscita_variabile">Uscita Variabile</option><option value="accumulo">Accumulo 2° conto</option></select></div>
     </div>
   </div>
   <div class="card">
@@ -255,8 +257,11 @@ tr:hover td{background:#fafafa}
 
 <!-- SECONDO CONTO -->
 <div class="page" id="page-secondo">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2>2° Conto</h2><select id="secondo-year" onchange="renderSecondo()"></select></div>
-  <div class="tab-bar"><button class="tab-btn active" id="s-tab-resoconto" onclick="setSecondoTab('resoconto')">Resoconto</button><button class="tab-btn" id="s-tab-obiettivi" onclick="setSecondoTab('obiettivi')">Obiettivi</button></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2>2° Conto</h2><select id="secondo-year" data-action="render-secondo"></select></div>
+  <div class="tab-bar">
+    <button class="tab-btn active" id="s-tab-resoconto" data-action="set-secondo-tab" data-val="resoconto">Resoconto</button>
+    <button class="tab-btn" id="s-tab-obiettivi" data-action="set-secondo-tab" data-val="obiettivi">Obiettivi</button>
+  </div>
   <div id="secondo-resoconto">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
       <div class="kpi-card"><div class="kpi-label">Totale accumulato</div><div class="kpi-value kpi-purple" id="s-totale">€0</div></div>
@@ -274,7 +279,7 @@ tr:hover td{background:#fafafa}
       <div style="font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Totale versato verso obiettivi</div>
       <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><div style="font-size:32px;font-weight:700" id="obs-totale">€0</div><div style="font-size:13px;opacity:.85" id="obs-dettaglio"></div></div>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn btn-purple" onclick="openGoal(null)"><i class="ti ti-plus"></i>Nuovo Obiettivo</button></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn btn-purple" data-action="open-goal"><i class="ti ti-plus"></i>Nuovo Obiettivo</button></div>
     <div class="goals-grid" id="goals-grid"></div>
     <div class="empty" id="goals-empty" style="display:none"><i class="ti ti-target"></i>Nessun obiettivo</div>
   </div>
@@ -282,10 +287,16 @@ tr:hover td{background:#fafafa}
 
 <!-- BUDGET -->
 <div class="page" id="page-budget">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2>Budget</h2><button class="btn btn-primary" onclick="openBudgetEdit()"><i class="ti ti-edit"></i>Imposta</button></div>
-  <div class="tab-bar"><button class="tab-btn active" id="budget-tab-mensile" onclick="setBudgetTab('mensile')">Mensile</button><button class="tab-btn" id="budget-tab-annuale" onclick="setBudgetTab('annuale')">Annuale</button></div>
-  <div id="budget-mensile-ctrl" style="display:flex;gap:8px;margin-bottom:16px"><select id="budget-month-sel" onchange="renderBudget()"><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select><select id="budget-year-sel" onchange="renderBudget()"></select></div>
-  <div id="budget-annuale-ctrl" style="display:none;gap:8px;margin-bottom:16px"><select id="budget-annual-year-sel" onchange="renderBudget()"></select></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2>Budget</h2><button class="btn btn-primary" data-action="open-budget-edit"><i class="ti ti-edit"></i>Imposta</button></div>
+  <div class="tab-bar">
+    <button class="tab-btn active" id="budget-tab-mensile" data-action="set-budget-tab" data-val="mensile">Mensile</button>
+    <button class="tab-btn" id="budget-tab-annuale" data-action="set-budget-tab" data-val="annuale">Annuale</button>
+  </div>
+  <div id="budget-mensile-ctrl" style="display:flex;gap:8px;margin-bottom:16px">
+    <select id="budget-month-sel" data-action="render-budget"><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select>
+    <select id="budget-year-sel" data-action="render-budget"></select>
+  </div>
+  <div id="budget-annuale-ctrl" style="display:none;gap:8px;margin-bottom:16px"><select id="budget-annual-year-sel" data-action="render-budget"></select></div>
   <div class="budget-grid" id="budget-grid"></div>
   <div class="empty" id="budget-empty" style="display:none"><i class="ti ti-chart-pie"></i>Nessuna categoria</div>
 </div>
@@ -300,112 +311,83 @@ tr:hover td{background:#fafafa}
       <input id="new-cat-name" placeholder="Nome categoria" style="flex:1;min-width:120px">
       <select id="new-cat-tipo"><option value="uscita">Uscita</option><option value="entrata">Entrata</option><option value="entrambi">Entrambi</option></select>
       <input type="color" id="new-cat-color" value="#4f46e5" style="width:40px;height:36px;border:1px solid var(--border);border-radius:8px;padding:2px;cursor:pointer">
-      <button class="btn btn-primary" onclick="addCategory()"><i class="ti ti-plus"></i>Aggiungi</button>
+      <button class="btn btn-primary" data-action="add-category"><i class="ti ti-plus"></i>Aggiungi</button>
     </div>
     <div id="cat-list"></div>
   </div>
-  <div class="card"><h3 style="margin-bottom:12px">Dati</h3><button class="btn btn-ghost" onclick="exportData()"><i class="ti ti-download"></i>Esporta JSON</button></div>
+  <div class="card"><h3 style="margin-bottom:12px">Dati</h3><button class="btn btn-ghost" data-action="export-data"><i class="ti ti-download"></i>Esporta JSON</button></div>
 </div>
 
 <!-- MODALS -->
-<div class="modal-overlay" id="modal-mov"><div class="modal"><h3 id="modal-mov-title">Nuovo Movimento</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group"><label>Data</label><input type="date" id="mov-data"></div><div class="form-group"><label>Importo (€)</label><input type="number" id="mov-importo" step="0.01" min="0"></div><div class="form-group"><label>Tipologia</label><select id="mov-tipologia" onchange="updateMovForm(null,null)"><option value="entrata">Entrata</option><option value="uscita">Uscita</option></select></div><div class="form-group"><label>Categoria</label><select id="mov-categoria"></select></div><div class="form-group"><label>Tipo</label><select id="mov-tipo" onchange="updateMovTipo()"></select></div><div class="form-group" id="obiettivo-group" style="display:none"><label>Obiettivo</label><select id="mov-obiettivo"><option value="">— Nessuno —</option></select></div><div class="form-group" style="grid-column:1/-1"><label>Descrizione</label><input type="text" id="mov-desc"></div></div><div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-mov')">Annulla</button><button class="btn btn-primary" onclick="saveMov()">Salva</button></div></div></div>
-<div class="modal-overlay" id="modal-budget"><div class="modal"><h3 id="modal-budget-title">Imposta Budget</h3><p style="font-size:13px;color:var(--muted);margin-bottom:12px" id="modal-budget-desc"></p><div id="budget-form-list" style="display:flex;flex-direction:column;gap:10px;max-height:350px;overflow-y:auto"></div><div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-budget')">Annulla</button><button class="btn btn-primary" onclick="saveBudget()">Salva</button></div></div></div>
-<div class="modal-overlay" id="modal-goal"><div class="modal"><h3 id="modal-goal-title">Nuovo Obiettivo</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group" style="grid-column:1/-1"><label>Nome</label><input type="text" id="goal-name"></div><div class="form-group"><label>Target (€)</label><input type="number" id="goal-target" step="0.01" min="0"></div><div class="form-group"><label>Già accumulato (€)</label><input type="number" id="goal-current" step="0.01" min="0" value="0"></div><div class="form-group"><label>Scadenza</label><input type="date" id="goal-deadline"></div><div class="form-group"><label>Note</label><input type="text" id="goal-note"></div></div><div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-goal')">Annulla</button><button class="btn btn-primary" onclick="saveGoal()">Salva</button></div></div></div>
-<div class="modal-overlay" id="modal-cat"><div class="modal"><h3>Modifica Categoria</h3><input type="hidden" id="edit-cat-id"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group" style="grid-column:1/-1"><label>Nome</label><input type="text" id="edit-cat-name"></div><div class="form-group"><label>Tipo</label><select id="edit-cat-tipo"><option value="uscita">Uscita</option><option value="entrata">Entrata</option><option value="entrambi">Entrambi</option></select></div><div class="form-group"><label>Colore</label><input type="color" id="edit-cat-color" style="width:100%;height:36px;border:1px solid var(--border);border-radius:8px;padding:2px;cursor:pointer"></div></div><div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-cat')">Annulla</button><button class="btn btn-primary" onclick="saveEditCat()">Salva</button></div></div></div>
-<div class="modal-overlay" id="modal-pdf"><div class="modal"><h3>Esporta PDF</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px"><div class="form-group"><label>Tipo</label><select id="pdf-tipo" onchange="updatePdfFields()"><option value="mensile">Mensile</option><option value="annuale">Annuale</option></select></div><div class="form-group"><label>Anno</label><select id="pdf-year"></select></div><div class="form-group" id="pdf-month-group"><label>Mese</label><select id="pdf-month"><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select></div></div><div class="modal-btns"><button class="btn btn-ghost" onclick="closeModal('modal-pdf')">Annulla</button><button class="btn btn-pdf" onclick="generatePdf()"><i class="ti ti-download"></i>Genera PDF</button></div></div></div>
+<div class="modal-overlay" id="modal-mov"><div class="modal"><h3 id="modal-mov-title">Nuovo Movimento</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group"><label>Data</label><input type="date" id="mov-data"></div><div class="form-group"><label>Importo (€)</label><input type="number" id="mov-importo" step="0.01" min="0"></div><div class="form-group"><label>Tipologia</label><select id="mov-tipologia" data-action="update-mov-form"><option value="entrata">Entrata</option><option value="uscita">Uscita</option></select></div><div class="form-group"><label>Categoria</label><select id="mov-categoria"></select></div><div class="form-group"><label>Tipo</label><select id="mov-tipo" data-action="update-mov-tipo"></select></div><div class="form-group" id="obiettivo-group" style="display:none"><label>Obiettivo</label><select id="mov-obiettivo"><option value="">— Nessuno —</option></select></div><div class="form-group" style="grid-column:1/-1"><label>Descrizione</label><input type="text" id="mov-desc"></div></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-mov">Annulla</button><button class="btn btn-primary" data-action="save-mov">Salva</button></div></div></div>
+<div class="modal-overlay" id="modal-budget"><div class="modal"><h3 id="modal-budget-title">Imposta Budget</h3><p style="font-size:13px;color:var(--muted);margin-bottom:12px" id="modal-budget-desc"></p><div id="budget-form-list" style="display:flex;flex-direction:column;gap:10px;max-height:350px;overflow-y:auto"></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-budget">Annulla</button><button class="btn btn-primary" data-action="save-budget">Salva</button></div></div></div>
+<div class="modal-overlay" id="modal-goal"><div class="modal"><h3 id="modal-goal-title">Nuovo Obiettivo</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group" style="grid-column:1/-1"><label>Nome</label><input type="text" id="goal-name"></div><div class="form-group"><label>Target (€)</label><input type="number" id="goal-target" step="0.01" min="0"></div><div class="form-group"><label>Già accumulato (€)</label><input type="number" id="goal-current" step="0.01" min="0" value="0"></div><div class="form-group"><label>Scadenza</label><input type="date" id="goal-deadline"></div><div class="form-group"><label>Note</label><input type="text" id="goal-note"></div></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-goal">Annulla</button><button class="btn btn-primary" data-action="save-goal">Salva</button></div></div></div>
+<div class="modal-overlay" id="modal-cat"><div class="modal"><h3>Modifica Categoria</h3><input type="hidden" id="edit-cat-id"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group" style="grid-column:1/-1"><label>Nome</label><input type="text" id="edit-cat-name"></div><div class="form-group"><label>Tipo</label><select id="edit-cat-tipo"><option value="uscita">Uscita</option><option value="entrata">Entrata</option><option value="entrambi">Entrambi</option></select></div><div class="form-group"><label>Colore</label><input type="color" id="edit-cat-color" style="width:100%;height:36px;border:1px solid var(--border);border-radius:8px;padding:2px;cursor:pointer"></div></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-cat">Annulla</button><button class="btn btn-primary" data-action="save-edit-cat">Salva</button></div></div></div>
+<div class="modal-overlay" id="modal-pdf"><div class="modal"><h3>Esporta PDF</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px"><div class="form-group"><label>Tipo</label><select id="pdf-tipo" data-action="update-pdf-fields"><option value="mensile">Mensile</option><option value="annuale">Annuale</option></select></div><div class="form-group"><label>Anno</label><select id="pdf-year"></select></div><div class="form-group" id="pdf-month-group"><label>Mese</label><select id="pdf-month"><option value="0">Gennaio</option><option value="1">Febbraio</option><option value="2">Marzo</option><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option><option value="8">Settembre</option><option value="9">Ottobre</option><option value="10">Novembre</option><option value="11">Dicembre</option></select></div></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-pdf">Annulla</button><button class="btn btn-pdf" data-action="generate-pdf"><i class="ti ti-download"></i>Genera PDF</button></div></div></div>
 
 <script>
 'use strict';
-// ── SUPABASE ─────────────────────────────────────────────────────
 const SUPABASE_URL='https://scuekneokzmjmbgnwzzj.supabase.co';
 const SUPABASE_KEY='sb_publishable_T3gPMGCoDpc-I1xSDiIsyQ_ZRS85xpI';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
-// ── COSTANTI ─────────────────────────────────────────────────────
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const COLORS=['#4f46e5','#16a34a','#dc2626','#d97706','#0891b2','#7c3aed','#db2777','#059669','#ea580c','#2563eb','#84cc16','#f43f5e'];
 const CORE_PAGES=[{id:'dashboard',label:'Dashboard',icon:'ti-layout-dashboard'},{id:'movimenti',label:'Movimenti',icon:'ti-plus-circle'},{id:'secondo',label:'2° Conto',icon:'ti-building-bank'},{id:'budget',label:'Budget',icon:'ti-chart-pie'},{id:'impostazioni',label:'Impostazioni',icon:'ti-settings'}];
 
-// ── STATO GLOBALE ─────────────────────────────────────────────────
 let db={movimenti:[],categorie:[],obiettivi:[],budgetMensile:[],budgetAnnuale:[],navLabels:{}};
 let currentPeriod='annual',pieSide='uscite',pieFormat='pct',budgetTab='mensile',secondoTab='resoconto';
-let simPeriod='month',simTab='fisse',simValues={},simExtras=[],simLocks={};
+let simPeriod='month',simTab='fisse',simValues={},simExtras=[],simLocks={},simFreq={};
 let editMovId=null,editGoalId=null;
 let pieChart=null,barChart=null,sBarChart=null,sPieChart=null;
 const now=new Date();
 
-// ── UTILITY ───────────────────────────────────────────────────────
 const fmt=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n);
 const catById=id=>db.categorie.find(c=>c.id===id);
 const dStr=s=>{const d=new Date(s+'T00:00:00');return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;};
-const closeModal=id=>document.getElementById(id).classList.remove('open');
-const loading=show=>document.getElementById('loading-overlay').style.display=show?'flex':'none';
-function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.style.background=err?'#dc2626':'#1a1a2e';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
-// ── CLOCK ─────────────────────────────────────────────────────────
+function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.style.background=err?'#dc2626':'#1a1a2e';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function loading(show){document.getElementById('loading-overlay').style.display=show?'flex':'none';}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openModal(id){document.getElementById(id).classList.add('open');}
+
+// Clock
 function tickClock(){const d=new Date();const wd=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'][d.getDay()];document.getElementById('clock-text').textContent=`${wd} ${String(d.getDate()).padStart(2,'0')} ${MONTHS[d.getMonth()].slice(0,3)} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
 setInterval(tickClock,1000);tickClock();
 
-// ── LOAD ─────────────────────────────────────────────────────────
+// Load
 async function loadAll(){
   loading(true);
   try{
-    const [cats,movs,obis,bm,ba,imp]=await Promise.all([
-      sb.from('categorie').select('*').order('nome'),
-      sb.from('movimenti').select('*').order('data',{ascending:false}),
-      sb.from('obiettivi').select('*').order('nome'),
-      sb.from('budget_mensile').select('*'),
-      sb.from('budget_annuale').select('*'),
-      sb.from('impostazioni').select('*'),
-    ]);
-    db.categorie=cats.data||[];
-    db.movimenti=movs.data||[];
-    db.obiettivi=obis.data||[];
-    db.budgetMensile=bm.data||[];
-    db.budgetAnnuale=ba.data||[];
-    const nl=imp.data?.find(r=>r.chiave==='nav_labels');
-    db.navLabels=nl?JSON.parse(nl.valore):{};
+    const [cats,movs,obis,bm,ba,imp]=await Promise.all([sb.from('categorie').select('*').order('nome'),sb.from('movimenti').select('*').order('data',{ascending:false}),sb.from('obiettivi').select('*').order('nome'),sb.from('budget_mensile').select('*'),sb.from('budget_annuale').select('*'),sb.from('impostazioni').select('*')]);
+    db.categorie=cats.data||[];db.movimenti=movs.data||[];db.obiettivi=obis.data||[];db.budgetMensile=bm.data||[];db.budgetAnnuale=ba.data||[];
+    const nl=imp.data?.find(r=>r.chiave==='nav_labels');db.navLabels=nl?JSON.parse(nl.valore):{};
     const ss=imp.data?.find(r=>r.chiave==='simulator_state');
-    if(ss){try{const p=JSON.parse(ss.valore);simPeriod=p.period||'month';simValues=p.values||{};simExtras=p.extras||[];simLocks=p.locks||{};}catch(e){}}
+    if(ss){try{const p=JSON.parse(ss.valore);simPeriod=p.period||'month';simValues=p.values||{};simExtras=(p.extras||[]).map(e=>({...e,freq:e.freq||'M'}));simLocks=p.locks||{};simFreq=p.freq||{};}catch(e){}}
   }catch(e){showToast('Errore caricamento',true);}
   loading(false);
 }
 
-// ── NAV ──────────────────────────────────────────────────────────
+// Nav
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id)?.classList.add('active');
   document.getElementById('nav-'+id)?.classList.add('active');
-  const map={dashboard:renderDashboard,movimenti:renderMovimenti,secondo:renderSecondo,budget:renderBudget,impostazioni:renderImpostazioni};
-  if(map[id])map[id]();
+  ({dashboard:renderDashboard,movimenti:renderMovimenti,secondo:renderSecondo,budget:renderBudget,impostazioni:()=>{renderNavLabels();renderCategorie();}})[id]?.();
 }
-document.getElementById('main-nav').addEventListener('click',e=>{const b=e.target.closest('.nav-btn');if(b&&b.dataset.page)showPage(b.dataset.page);});
 
-function updateNavBtn(pid,label){const b=document.getElementById('nav-'+pid);if(b){const s=b.querySelector('span');if(s)s.textContent=label;}}
-function renderImpostazioni(){renderNavLabels();renderCategorie();}
+function updateNavBtn(pid,lbl){const b=document.getElementById('nav-'+pid);if(b){const s=b.querySelector('span');if(s)s.textContent=lbl;}}
 function renderNavLabels(){
-  document.getElementById('nav-labels-list').innerHTML=CORE_PAGES.map(p=>{
-    const lbl=db.navLabels[p.id]||p.label;
-    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><i class="ti ${p.icon}" style="color:var(--muted);width:20px;text-align:center"></i><span style="flex:1;font-size:13px;color:var(--muted)">${p.label}</span><input type="text" value="${lbl}" data-page-id="${p.id}" style="width:160px;font-size:13px"><button class="btn btn-ghost btn-sm" data-action="save-nav-label" data-page-id="${p.id}">Salva</button><button class="btn btn-ghost btn-sm" data-action="reset-nav-label" data-page-id="${p.id}">Reset</button></div>`;
-  }).join('');
+  document.getElementById('nav-labels-list').innerHTML=CORE_PAGES.map(p=>{const lbl=db.navLabels[p.id]||p.label;return`<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><i class="ti ${p.icon}" style="color:var(--muted);width:20px;text-align:center"></i><span style="flex:1;font-size:13px;color:var(--muted)">${p.label}</span><input type="text" value="${lbl}" data-page-id="${p.id}" style="width:160px;font-size:13px"><button class="btn btn-ghost btn-sm" data-action="save-nav-label" data-page-id="${p.id}">Salva</button><button class="btn btn-ghost btn-sm" data-action="reset-nav-label" data-page-id="${p.id}">Reset</button></div>`;}).join('');
 }
 
 function populateYears(ids){
   const yrs=[...new Set(db.movimenti.map(m=>new Date(m.data+'T00:00:00').getFullYear()))];
   const cy=now.getFullYear();if(!yrs.includes(cy))yrs.push(cy);yrs.sort((a,b)=>b-a);
-  (ids||['year-select','budget-year-sel','budget-annual-year-sel','secondo-year','pdf-year','sim-year-sel','sim-goal-year']).forEach(id=>{
-    const el=document.getElementById(id);if(!el)return;
-    const cur=parseInt(el.value)||cy;
-    el.innerHTML=yrs.map(y=>`<option value="${y}"${y===cur?' selected':''}>${y}</option>`).join('');
-  });
+  (ids||['year-select','budget-year-sel','budget-annual-year-sel','secondo-year','pdf-year','sim-year-sel','sim-goal-year']).forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=parseInt(el.value)||cy;el.innerHTML=yrs.map(y=>`<option value="${y}"${y===cur?' selected':''}>${y}</option>`).join('');});
 }
 
-// ── DASHBOARD ────────────────────────────────────────────────────
-function setPeriod(p){currentPeriod=p;document.getElementById('seg-annual').classList.toggle('active',p==='annual');document.getElementById('seg-month').classList.toggle('active',p==='month');document.getElementById('month-select').style.display=p==='month'?'block':'none';renderDashboard();}
-function setPieSide(s){pieSide=s;document.getElementById('pie-seg-usc').classList.toggle('active',s==='uscite');document.getElementById('pie-seg-ent').classList.toggle('active',s==='entrate');renderDashboard();}
-function setPieFormat(f){pieFormat=f;document.getElementById('pie-fmt-pct').classList.toggle('active',f==='pct');document.getElementById('pie-fmt-eur').classList.toggle('active',f==='eur');renderDashboard();}
-
+// Dashboard
 function getMainMovs(){
   const yr=parseInt(document.getElementById('year-select').value||now.getFullYear());
   return db.movimenti.filter(m=>{const d=new Date(m.data+'T00:00:00');if(d.getFullYear()!==yr||m.tipo==='accumulo')return false;if(currentPeriod==='month'&&d.getMonth()!==parseInt(document.getElementById('month-select').value))return false;return true;});
@@ -419,18 +401,13 @@ function renderDashboard(){
   const ent=movs.filter(m=>m.tipologia==='entrata').reduce((s,m)=>s+Number(m.importo),0);
   const usc=movs.filter(m=>m.tipologia==='uscita').reduce((s,m)=>s+Number(m.importo),0);
   const sal=ent-usc,sav=ent>0?(sal/ent*100):0;
-  document.getElementById('kpi-entrate').textContent=fmt(ent);
-  document.getElementById('kpi-uscite').textContent=fmt(usc);
-  document.getElementById('kpi-saldo').textContent=fmt(sal);
-  document.getElementById('kpi-saldo').className='kpi-value '+(sal>=0?'kpi-blue':'kpi-red');
+  document.getElementById('kpi-entrate').textContent=fmt(ent);document.getElementById('kpi-uscite').textContent=fmt(usc);
+  document.getElementById('kpi-saldo').textContent=fmt(sal);document.getElementById('kpi-saldo').className='kpi-value '+(sal>=0?'kpi-blue':'kpi-red');
   document.getElementById('kpi-savings').textContent=sav.toFixed(1)+'%';
-  // Pie
   const side=pieSide==='uscite'?'uscita':'entrata';
   const bc={};movs.filter(m=>m.tipologia===side).forEach(m=>{bc[m.categoria]=(bc[m.categoria]||0)+Number(m.importo);});
   const sorted=Object.entries(bc).sort((a,b)=>b[1]-a[1]);
-  const ids=sorted.map(s=>s[0]),vals=sorted.map(s=>s[1]);
-  const lbls=ids.map(id=>(catById(id)||{nome:id}).nome);
-  const cols=ids.map((id,i)=>(catById(id)||{colore:COLORS[i%12]}).colore);
+  const ids=sorted.map(s=>s[0]),vals=sorted.map(s=>s[1]),lbls=ids.map(id=>(catById(id)||{nome:id}).nome),cols=ids.map((id,i)=>(catById(id)||{colore:COLORS[i%12]}).colore);
   if(pieChart)pieChart.destroy();
   pieChart=new Chart(document.getElementById('pieChart').getContext('2d'),{type:'doughnut',data:{labels:lbls,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)}`}}}}});
   const tot=vals.reduce((s,v)=>s+v,0);
@@ -438,196 +415,184 @@ function renderDashboard(){
   leg.innerHTML=lbls.length?lbls.map((l,i)=>{const v=pieFormat==='pct'?(tot>0?(vals[i]/tot*100).toFixed(1)+'%':'0%'):fmt(vals[i]);return`<div style="display:grid;grid-template-columns:10px 1fr auto;gap:6px;align-items:center;padding:3px 0"><span class="pie-ld" style="background:${cols[i]}"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px">${l}</span><span style="font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;padding-left:4px">${v}</span></div>`;}).join(''):'<div style="color:var(--muted);font-size:12px;padding:8px">Nessun dato</div>';
   setTimeout(()=>{const fade=document.getElementById('pie-fade');if(fade)fade.style.opacity=leg.scrollHeight>leg.clientHeight?'1':'0';},50);
   leg.onscroll=()=>{const fade=document.getElementById('pie-fade');if(fade)fade.style.opacity=leg.scrollTop+leg.clientHeight>=leg.scrollHeight-4?'0':'1';};
-  // Bar
   const yr=parseInt(document.getElementById('year-select').value||now.getFullYear());
   const bm=Array(12).fill(0).map(()=>({e:0,u:0}));
   db.movimenti.filter(m=>new Date(m.data+'T00:00:00').getFullYear()===yr&&m.tipo!=='accumulo').forEach(m=>{const mo=new Date(m.data+'T00:00:00').getMonth();if(m.tipologia==='entrata')bm[mo].e+=Number(m.importo);else bm[mo].u+=Number(m.importo);});
   if(barChart)barChart.destroy();
   barChart=new Chart(document.getElementById('barChart').getContext('2d'),{type:'bar',data:{labels:MONTHS.map(m=>m.slice(0,3)),datasets:[{label:'Entrate',data:bm.map(m=>m.e),backgroundColor:'rgba(22,163,74,0.7)',borderRadius:4},{label:'Uscite',data:bm.map(m=>m.u),backgroundColor:'rgba(220,38,38,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'€'+v.toLocaleString('it-IT')}}}}});
-  // Sim selects init
-  document.getElementById('sim-period-month').classList.toggle('active',simPeriod==='month');
-  document.getElementById('sim-period-year').classList.toggle('active',simPeriod==='year');
-  document.getElementById('sim-month-sel').style.display=simPeriod==='month'?'':'none';
-  // Goal selects
-  const gs=document.getElementById('sim-goal-sel');
-  gs.innerHTML='<option value="">— Seleziona —</option>'+db.obiettivi.map(g=>`<option value="${g.id}">${g.nome}</option>`).join('');
-  renderSimulator();
-  renderRecent();
+  renderSim();renderRecent();
 }
 
 function renderRecent(){
   const catF=document.getElementById('recent-cat-filter').value;
   let movs=[...db.movimenti].sort((a,b)=>new Date(b.data)-new Date(a.data));
-  if(catF)movs=movs.filter(m=>m.categoria===catF);
-  movs=movs.slice(0,12);
+  if(catF)movs=movs.filter(m=>m.categoria===catF);movs=movs.slice(0,12);
   const TL={entrata:'Entrata',uscita_fissa:'Uscita Fissa',uscita_variabile:'Uscita Var.',accumulo:'Accumulo 2°'};
   const TB={entrata:'badge-green',uscita_fissa:'badge-red',uscita_variabile:'badge-amber',accumulo:'badge-purple'};
   document.getElementById('recent-body').innerHTML=movs.length?movs.map(m=>{const c=catById(m.categoria);return`<tr><td>${dStr(m.data)}</td><td>${c?`<span style="display:inline-flex;align-items:center;gap:5px"><span class="dot" style="background:${c.colore}"></span>${c.nome}</span>`:'—'}</td><td>${m.descrizione||'—'}</td><td><span class="badge ${TB[m.tipo]||'badge-blue'}">${TL[m.tipo]||m.tipo}</span></td><td style="text-align:right;font-weight:600;color:${m.tipologia==='entrata'?'#16a34a':'#dc2626'}">${m.tipologia==='entrata'?'+':'−'}${fmt(m.importo)}</td></tr>`;}).join(''):'<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px">Nessun movimento</td></tr>';
 }
 
-// ── SIMULATORE ───────────────────────────────────────────────────
-function getSimYr(){return parseInt(document.getElementById('sim-year-sel')?.value||now.getFullYear());}
-function getSimMo(){return parseInt(document.getElementById('sim-month-sel')?.value||now.getMonth());}
+// ═══════════════════════ SIMULATORE ═══════════════════════════════
+function simYr(){return parseInt(document.getElementById('sim-year-sel')?.value||now.getFullYear());}
+function simMo(){return parseInt(document.getElementById('sim-month-sel')?.value||now.getMonth());}
 
-function mediaStorica(catId,nMesi,refMo,refYr){
+function mediaStorica(catId,n,refMo,refYr){
   let tot=0,cnt=0;
-  for(let i=1;i<=nMesi;i++){
-    let m=refMo-i,y=refYr;if(m<0){m+=12;y--;}
-    const s=db.movimenti.filter(x=>{const d=new Date(x.data+'T00:00:00');return d.getFullYear()===y&&d.getMonth()===m&&x.categoria===catId&&x.tipo!=='accumulo';}).reduce((a,x)=>a+Number(x.importo),0);
-    if(s>0){tot+=s;cnt++;}
-  }
+  for(let i=1;i<=n;i++){let m=refMo-i,y=refYr;if(m<0){m+=12;y--;}const s=db.movimenti.filter(x=>{const d=new Date(x.data+'T00:00:00');return d.getFullYear()===y&&d.getMonth()===m&&x.categoria===catId&&x.tipo!=='accumulo';}).reduce((a,x)=>a+Number(x.importo),0);if(s>0){tot+=s;cnt++;}}
   return cnt>0?tot/cnt:0;
 }
 
-function calcolaEntrateMedie(){
+function entrateStoriche(){
   let tot=0,cnt=0;
-  for(let i=1;i<=3;i++){
-    let m=now.getMonth()-i,y=now.getFullYear();if(m<0){m+=12;y--;}
-    const s=db.movimenti.filter(x=>{const d=new Date(x.data+'T00:00:00');return d.getFullYear()===y&&d.getMonth()===m&&x.tipologia==='entrata'&&x.tipo!=='accumulo';}).reduce((a,x)=>a+Number(x.importo),0);
-    if(s>0){tot+=s;cnt++;}
-  }
+  for(let i=1;i<=3;i++){let m=now.getMonth()-i,y=now.getFullYear();if(m<0){m+=12;y--;}const s=db.movimenti.filter(x=>{const d=new Date(x.data+'T00:00:00');return d.getFullYear()===y&&d.getMonth()===m&&x.tipologia==='entrata'&&x.tipo!=='accumulo';}).reduce((a,x)=>a+Number(x.importo),0);if(s>0){tot+=s;cnt++;}}
   return cnt>0?tot/cnt:0;
 }
 
-function getSimVal(catId,tipoMov){
-  if(simValues[catId]!==undefined)return simValues[catId];
-  const yr=getSimYr(),mo=getSimMo();
-  const b=db.budgetMensile.find(r=>r.anno===yr&&r.mese===mo&&r.categoria_id===catId);
-  if(b)return Number(b.importo);
-  return mediaStorica(catId,3,mo,yr);
+// Restituisce il valore MENSILE simulato per una categoria
+function simValMensile(catId,tipoMov){
+  const raw=simValues[catId]!==undefined?simValues[catId]:(() => {const b=db.budgetMensile.find(r=>r.anno===simYr()&&r.mese===simMo()&&r.categoria_id===catId);return b?Number(b.importo):mediaStorica(catId,3,simMo(),simYr());})();
+  return (simFreq[catId]||'M')==='A'?raw/12:raw;
+}
+
+function simEntrateMensili(){
+  const raw=simValues['__ent']!==undefined?simValues['__ent']:entrateStoriche();
+  return raw;
 }
 
 function calcTotali(){
-  const entrate=calcolaEntrateMedie();
-  const catIdsFisse=[...new Set(db.movimenti.filter(m=>m.tipo==='uscita_fissa').map(m=>m.categoria))];
-  const catIdsVar=[...new Set(db.movimenti.filter(m=>m.tipo==='uscita_variabile').map(m=>m.categoria))];
-  const totFisse=catIdsFisse.reduce((s,id)=>s+getSimVal(id,'uscita_fissa'),0)+simExtras.reduce((s,e)=>s+e.valore,0);
-  const totVar=catIdsVar.reduce((s,id)=>s+getSimVal(id,'uscita_variabile'),0);
+  const entrate=simEntrateMensili();
+  const catFisse=[...new Set(db.movimenti.filter(m=>m.tipo==='uscita_fissa').map(m=>m.categoria))];
+  const catVar=[...new Set(db.movimenti.filter(m=>m.tipo==='uscita_variabile').map(m=>m.categoria))];
+  const totFisse=catFisse.reduce((s,id)=>s+simValMensile(id,'uscita_fissa'),0)+simExtras.reduce((s,e)=>s+((e.freq||'M')==='A'?e.valore/12:e.valore),0);
+  const totVar=catVar.reduce((s,id)=>s+simValMensile(id,'uscita_variabile'),0);
   return{entrate,totFisse,totVar,saldo:entrate-totFisse-totVar};
 }
 
-function setSimPeriod(p){
-  simPeriod=p;
-  document.getElementById('sim-period-month').classList.toggle('active',p==='month');
-  document.getElementById('sim-period-year').classList.toggle('active',p==='year');
-  document.getElementById('sim-month-sel').style.display=p==='month'?'':'none';
-  renderSimulator();
+function renderSim(){
+  const simYrEl=document.getElementById('sim-year-sel');if(!simYrEl)return;
+  document.getElementById('sim-period-month').classList.toggle('active',simPeriod==='month');
+  document.getElementById('sim-period-year').classList.toggle('active',simPeriod==='year');
+  document.getElementById('sim-month-sel').style.display=simPeriod==='month'?'':'none';
+  renderSimRiepilogo();
+  renderSimEntrate();
+  if(simTab==='fisse')renderSimFisse();
+  else if(simTab==='variabili')renderSimVar();
 }
 
-function setSimTab(t){
-  simTab=t;
-  ['fisse','variabili','obiettivo'].forEach(x=>{
-    document.getElementById('sim-tab-'+x).classList.toggle('active',x===t);
-    document.getElementById('sim-content-'+x).style.display=x===t?'block':'none';
-  });
-  renderSimulator();
+function renderSimRiepilogo(){
+  const {entrate,totFisse,totVar,saldo}=calcTotali();
+  const label=simPeriod==='month'?MONTHS[simMo()].slice(0,3)+' '+simYr():String(simYr());
+  document.getElementById('sim-riepilogo').innerHTML=`
+    <div class="sim-sc"><div class="sim-sl">Entrate</div><div class="sim-sv" style="color:var(--green)">${fmt(entrate)}</div></div>
+    <div class="sim-sc"><div class="sim-sl">− Fisse</div><div class="sim-sv" style="color:var(--red)">${fmt(totFisse)}</div></div>
+    <div class="sim-sc"><div class="sim-sl">− Variabili</div><div class="sim-sv" style="color:var(--amber)">${fmt(totVar)}</div></div>
+    <div class="sim-sc" style="border:2px solid ${saldo>=0?'#bbf7d0':'#fecaca'}"><div class="sim-sl">= Saldo</div><div class="sim-sv" style="color:${saldo>=0?'var(--green)':'var(--red)'}">${fmt(saldo)}</div></div>
+    <div class="sim-sc"><div class="sim-sl">Periodo</div><div class="sim-sv" style="font-size:13px">${label}</div></div>`;
 }
 
-function resetSimulator(){simValues={};simExtras=[];simLocks={};renderSimulator();}
+function renderSimEntrate(){
+  const storico=entrateStoriche();
+  const val=simValues['__ent']!==undefined?simValues['__ent']:storico;
+  const max=Math.max(val*2,storico*2,4000);
+  const delta=storico>0?((val-storico)/storico*100):0;
+  const dStr2=delta===0?'—':(delta>0?'+':'')+delta.toFixed(0)+'%';
+  const dCol=delta>0?'var(--green)':delta<0?'var(--red)':'var(--muted)';
+  document.getElementById('sim-entrate-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:180px 60px 1fr 145px;gap:8px;align-items:center">
+      <div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500"><span class="dot" style="background:var(--green);flex-shrink:0"></span>Entrate mensili</div>
+      <div style="text-align:right;font-size:11px;color:var(--muted)">${fmt(storico)}</div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <input type="range" class="sim-slider" min="0" max="${max}" step="10" value="${val}" data-sim-type="entrate" id="slider-entrate">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>€0</span><span style="color:${dCol};font-weight:600">${dStr2}</span><span>${fmt(max)}</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+        <input type="number" class="sim-input" min="0" step="10" value="${val.toFixed(2)}" data-sim-type="entrate" id="input-entrate" style="color:var(--green)">
+        <span style="font-size:10px;color:var(--muted)">${fmt(val*12)}/anno</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#16a34a;margin-top:6px;padding-top:6px;border-top:1px solid #bbf7d0">💡 Simula uno stipendio extra o una promozione</div>`;
+}
 
 function simRowHTML(catId,nome,colore,storico,tipoMov,extraId){
   const isExtra=extraId!=null;
-  const val=isExtra?(simExtras.find(e=>e.id===extraId)?.valore||0):getSimVal(catId,tipoMov);
-  const max=Math.max(val*2.5,storico*2.5,200);
+  const freq=isExtra?((simExtras.find(e=>e.id===extraId)?.freq)||'M'):(simFreq[catId]||'M');
+  let rawVal;
+  if(isExtra) rawVal=simExtras.find(e=>e.id===extraId)?.valore||0;
+  else{rawVal=simValues[catId]!==undefined?simValues[catId]:(() => {const b=db.budgetMensile.find(r=>r.anno===simYr()&&r.mese===simMo()&&r.categoria_id===catId);return b?Number(b.importo):storico;})();}
+  const storicoD=freq==='A'?storico*12:storico;
+  const max=Math.max(rawVal*2.5,storicoD*2.5,freq==='A'?2400:200);
   const locked=simLocks[isExtra?extraId:catId]||false;
-  const dAttr=isExtra?`data-extra="${extraId}"`:`data-cat="${catId}"`;
-  const delta=storico>0?((val-storico)/storico*100):0;
-  const dStr2=storico>0?(delta===0?'—':(delta>0?'+':'')+delta.toFixed(0)+'%'):'nuovo';
+  const key=isExtra?`data-extra-id="${extraId}"`:(`data-cat-id="${catId}"`);
+  const delta=storicoD>0?((rawVal-storicoD)/storicoD*100):0;
+  const dStr2=storicoD>0?(delta===0?'—':(delta>0?'+':'')+delta.toFixed(0)+'%'):'nuovo';
   const dCol=delta>0?'var(--red)':delta<0?'var(--green)':'var(--muted)';
+  const valMensile=freq==='A'?rawVal/12:rawVal;
   return `<div class="sim-row" style="${isExtra?'background:#f0fdf4;border:1px dashed #bbf7d0':''}">
-    <div class="sim-cat"><span class="dot" style="background:${colore||'#9ca3af'};flex-shrink:0"></span><span class="sim-cat-name">${nome}${isExtra?' <span style="font-size:10px;color:#16a34a">(extra)</span>':''}</span></div>
-    <div style="text-align:right;font-size:11px;color:var(--muted)">${storico>0?fmt(storico):'—'}</div>
+    <div style="display:flex;align-items:center;gap:7px;font-weight:500;min-width:0;overflow:hidden"><span class="dot" style="background:${colore||'#9ca3af'};flex-shrink:0"></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome}</span></div>
+    <div style="text-align:right;font-size:11px;color:var(--muted)">${storicoD>0?fmt(storicoD):'—'}<br><span style="font-size:9px">${freq==='A'?'annuo':'mese'}</span></div>
     <div style="display:flex;flex-direction:column;gap:2px">
-      <input type="range" class="sim-slider${locked?' locked':''}" min="0" max="${max}" step="0.5" value="${val}" ${dAttr} data-tipo="${tipoMov}" ${locked?'disabled':''} oninput="onSimSlide(this)">
+      <input type="range" class="sim-slider${locked?' locked':''}" min="0" max="${max}" step="${freq==='A'?10:0.5}" value="${rawVal}" ${key} data-freq="${freq}" data-tipo="${tipoMov}" ${locked?'disabled':''}>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>€0</span><span style="color:${dCol};font-weight:600">${dStr2}</span><span>${fmt(max)}</span></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
-      <input type="number" class="sim-input${locked?' locked':''}" min="0" step="0.01" value="${val.toFixed(2)}" ${dAttr} data-tipo="${tipoMov}" ${locked?'readonly':''} oninput="onSimInput(this)" style="color:var(--red)">
-      <span style="font-size:10px;color:var(--muted)">${fmt(val*12)}/anno</span>
+      <input type="number" class="sim-input${locked?' locked':''}" min="0" step="${freq==='A'?10:0.01}" value="${rawVal.toFixed(2)}" ${key} data-freq="${freq}" data-tipo="${tipoMov}" ${locked?'readonly':''} style="color:var(--red)">
+      <div style="font-size:10px;color:var(--muted);text-align:right">${freq==='A'?fmt(valMensile)+'/mese':fmt(valMensile*12)+'/anno'}</div>
+      <div class="freq-toggle">
+        <button class="freq-btn${freq==='M'?' active':''}" data-action="set-freq" data-key="${isExtra?extraId:catId}" data-is-extra="${isExtra}" data-val="M">M</button>
+        <button class="freq-btn${freq==='A'?' active':''}" data-action="set-freq" data-key="${isExtra?extraId:catId}" data-is-extra="${isExtra}" data-val="A">A</button>
+      </div>
     </div>
     <button class="lock-btn${locked?' active':''}" data-action="toggle-sim-lock" data-key="${isExtra?extraId:catId}">${locked?'🔒':'🔓'}</button>
   </div>`;
 }
 
-function renderSimulator(){
-  const simYrEl=document.getElementById('sim-year-sel');if(!simYrEl)return;
-  const {entrate,totFisse,totVar,saldo}=calcTotali();
-  const yr=getSimYr(),mo=getSimMo();
-  const label=simPeriod==='month'?MONTHS[mo].slice(0,3)+' '+yr:String(yr);
-  document.getElementById('sim-riepilogo').innerHTML=`
-    <div class="sim-sc"><div class="sim-sl">Entrate medie</div><div class="sim-sv" style="color:var(--green)">${fmt(entrate)}</div></div>
-    <div class="sim-sc"><div class="sim-sl">− Fisse</div><div class="sim-sv" style="color:var(--red)">${fmt(totFisse)}</div></div>
-    <div class="sim-sc"><div class="sim-sl">− Variabili</div><div class="sim-sv" style="color:var(--amber)">${fmt(totVar)}</div></div>
-    <div class="sim-sc" style="border:2px solid ${saldo>=0?'#bbf7d0':'#fecaca'}"><div class="sim-sl">= Saldo</div><div class="sim-sv" style="color:${saldo>=0?'var(--green)':'var(--red)'}">${fmt(saldo)}</div></div>
-    <div class="sim-sc"><div class="sim-sl">Periodo</div><div class="sim-sv" style="font-size:13px">${label}</div></div>`;
-  if(simTab==='fisse')renderSimFisse();
-  else if(simTab==='variabili')renderSimVariabili();
-}
-
 function renderSimFisse(){
-  const mo=getSimMo(),yr=getSimYr();
   const catIds=[...new Set(db.movimenti.filter(m=>m.tipo==='uscita_fissa').map(m=>m.categoria))];
-  document.getElementById('sim-list-fisse').innerHTML=catIds.map(id=>{const c=catById(id);if(!c)return'';const st=mediaStorica(id,3,mo,yr);return simRowHTML(id,c.nome,c.colore,st,'uscita_fissa',null);}).join('');
+  document.getElementById('sim-list-fisse').innerHTML=catIds.map(id=>{const c=catById(id);if(!c)return'';return simRowHTML(id,c.nome,c.colore,mediaStorica(id,3,simMo(),simYr()),'uscita_fissa',null);}).join('');
   document.getElementById('sim-list-extras').innerHTML=simExtras.map(e=>simRowHTML(null,e.nome,'#16a34a',0,'extra',e.id)).join('');
-  const tot=catIds.reduce((s,id)=>s+getSimVal(id,'uscita_fissa'),0)+simExtras.reduce((s,e)=>s+e.valore,0);
-  document.getElementById('sim-tot-fisse').innerHTML=`<span>Totale spese fisse</span><span style="display:flex;gap:20px"><span style="color:var(--red)">${fmt(tot)}/mese</span><span style="color:var(--muted)">${fmt(tot*12)}/anno</span></span>`;
+  const tot=catIds.reduce((s,id)=>s+simValMensile(id,'uscita_fissa'),0)+simExtras.reduce((s,e)=>s+((e.freq||'M')==='A'?e.valore/12:e.valore),0);
+  document.getElementById('sim-tot-fisse').innerHTML=`<span>Totale fisse</span><span style="display:flex;gap:16px"><span style="color:var(--red)">${fmt(tot)}/mese</span><span style="color:var(--muted)">${fmt(tot*12)}/anno</span></span>`;
 }
 
-function renderSimVariabili(){
-  const mo=getSimMo(),yr=getSimYr();
+function renderSimVar(){
   const catIds=[...new Set(db.movimenti.filter(m=>m.tipo==='uscita_variabile').map(m=>m.categoria))];
-  document.getElementById('sim-list-variabili').innerHTML=catIds.map(id=>{const c=catById(id);if(!c)return'';const st=mediaStorica(id,3,mo,yr);return simRowHTML(id,c.nome,c.colore,st,'uscita_variabile',null);}).join('');
-  const tot=catIds.reduce((s,id)=>s+getSimVal(id,'uscita_variabile'),0);
-  document.getElementById('sim-tot-variabili').innerHTML=`<span>Totale spese variabili</span><span style="display:flex;gap:20px"><span style="color:var(--amber)">${fmt(tot)}/mese</span><span style="color:var(--muted)">${fmt(tot*12)}/anno</span></span>`;
+  document.getElementById('sim-list-variabili').innerHTML=catIds.map(id=>{const c=catById(id);if(!c)return'';return simRowHTML(id,c.nome,c.colore,mediaStorica(id,3,simMo(),simYr()),'uscita_variabile',null);}).join('');
+  const tot=catIds.reduce((s,id)=>s+simValMensile(id,'uscita_variabile'),0);
+  document.getElementById('sim-tot-variabili').innerHTML=`<span>Totale variabili</span><span style="display:flex;gap:16px"><span style="color:var(--amber)">${fmt(tot)}/mese</span><span style="color:var(--muted)">${fmt(tot*12)}/anno</span></span>`;
 }
 
-function onSimSlide(el){
-  const val=parseFloat(el.value);
-  if(el.dataset.extra){const e=simExtras.find(x=>x.id===el.dataset.extra);if(e)e.valore=val;}
-  else if(el.dataset.cat)simValues[el.dataset.cat]=val;
-  // sync input numerico nella stessa riga
-  const row=el.closest('.sim-row');
-  if(row){const inp=row.querySelector('.sim-input');if(inp){inp.value=val.toFixed(2);const sp=inp.nextElementSibling;if(sp)sp.textContent=fmt(val*12)+'/anno';}}
-  refreshRiepilogo();
+function simSliderChange(el,val){
+  const freq=el.dataset.freq||'M';
+  if(el.dataset.simType==='entrate'){simValues['__ent']=val;renderSimEntrate();renderSimRiepilogo();return;}
+  if(el.dataset.extraId){const e=simExtras.find(x=>x.id===el.dataset.extraId);if(e){e.valore=val;e.freq=freq;}}
+  else if(el.dataset.catId){simValues[el.dataset.catId]=val;simFreq[el.dataset.catId]=freq;}
+  syncSimPair(el,val,freq);
+  renderSimRiepilogo();
+  updateSimTotale();
 }
 
-function onSimInput(el){
-  const val=Math.max(0,parseFloat(el.value)||0);
-  if(el.dataset.extra){const e=simExtras.find(x=>x.id===el.dataset.extra);if(e)e.valore=val;}
-  else if(el.dataset.cat)simValues[el.dataset.cat]=val;
-  const row=el.closest('.sim-row');
-  if(row){const sl=row.querySelector('.sim-slider');if(sl){if(val>parseFloat(sl.max))sl.max=val*1.5;sl.value=val;}const sp=el.nextElementSibling;if(sp)sp.textContent=fmt(val*12)+'/anno';}
-  refreshRiepilogo();
+function syncSimPair(el,val,freq){
+  // trova l'elemento accoppiato (slider ↔ input) nella stessa riga
+  const row=el.closest('.sim-row');if(!row)return;
+  const isSlider=el.type==='range';
+  const paired=isSlider?row.querySelector('input[type=number]'):row.querySelector('input[type=range]');
+  if(paired)paired.value=val.toFixed?val.toFixed(2):val;
+  // aggiorna label /mese o /anno
+  const valM=freq==='A'?val/12:val;
+  const spans=row.querySelectorAll('div[style*="font-size:10px"]');
+  spans.forEach(sp=>{if(sp.textContent.includes('/mese')||sp.textContent.includes('/anno')){sp.textContent=freq==='A'?fmt(valM)+'/mese':fmt(valM*12)+'/anno';}});
 }
 
-function refreshRiepilogo(){
-  const {entrate,totFisse,totVar,saldo}=calcTotali();
-  const yr=getSimYr(),mo=getSimMo();
-  const label=simPeriod==='month'?MONTHS[mo].slice(0,3)+' '+yr:String(yr);
-  document.getElementById('sim-riepilogo').innerHTML=`
-    <div class="sim-sc"><div class="sim-sl">Entrate medie</div><div class="sim-sv" style="color:var(--green)">${fmt(entrate)}</div></div>
-    <div class="sim-sc"><div class="sim-sl">− Fisse</div><div class="sim-sv" style="color:var(--red)">${fmt(totFisse)}</div></div>
-    <div class="sim-sc"><div class="sim-sl">− Variabili</div><div class="sim-sv" style="color:var(--amber)">${fmt(totVar)}</div></div>
-    <div class="sim-sc" style="border:2px solid ${saldo>=0?'#bbf7d0':'#fecaca'}"><div class="sim-sl">= Saldo</div><div class="sim-sv" style="color:${saldo>=0?'var(--green)':'var(--red)'}">${fmt(saldo)}</div></div>
-    <div class="sim-sc"><div class="sim-sl">Periodo</div><div class="sim-sv" style="font-size:13px">${label}</div></div>`;
-  // aggiorna totali tab
+function updateSimTotale(){
   if(simTab==='fisse'){
     const catIds=[...new Set(db.movimenti.filter(m=>m.tipo==='uscita_fissa').map(m=>m.categoria))];
-    const tot=catIds.reduce((s,id)=>s+getSimVal(id,'uscita_fissa'),0)+simExtras.reduce((s,e)=>s+e.valore,0);
-    document.getElementById('sim-tot-fisse').innerHTML=`<span>Totale spese fisse</span><span style="display:flex;gap:20px"><span style="color:var(--red)">${fmt(tot)}/mese</span><span style="color:var(--muted)">${fmt(tot*12)}/anno</span></span>`;
+    const tot=catIds.reduce((s,id)=>s+simValMensile(id,'uscita_fissa'),0)+simExtras.reduce((s,e)=>s+((e.freq||'M')==='A'?e.valore/12:e.valore),0);
+    const el=document.getElementById('sim-tot-fisse');if(el)el.innerHTML=`<span>Totale fisse</span><span style="display:flex;gap:16px"><span style="color:var(--red)">${fmt(tot)}/mese</span><span style="color:var(--muted)">${fmt(tot*12)}/anno</span></span>`;
   } else if(simTab==='variabili'){
     const catIds=[...new Set(db.movimenti.filter(m=>m.tipo==='uscita_variabile').map(m=>m.categoria))];
-    const tot=catIds.reduce((s,id)=>s+getSimVal(id,'uscita_variabile'),0);
-    document.getElementById('sim-tot-variabili').innerHTML=`<span>Totale spese variabili</span><span style="display:flex;gap:20px"><span style="color:var(--amber)">${fmt(tot)}/mese</span><span style="color:var(--muted)">${fmt(tot*12)}/anno</span></span>`;
+    const tot=catIds.reduce((s,id)=>s+simValMensile(id,'uscita_variabile'),0);
+    const el=document.getElementById('sim-tot-variabili');if(el)el.innerHTML=`<span>Totale variabili</span><span style="display:flex;gap:16px"><span style="color:var(--amber)">${fmt(tot)}/mese</span><span style="color:var(--muted)">${fmt(tot*12)}/anno</span></span>`;
   }
-}
-
-function addSimExtra(){
-  const nome=window.prompt('Nome della voce extra (es. Affitto):');if(!nome)return;
-  const rawVal=window.prompt('Importo mensile (€):');if(rawVal===null)return;
-  const val=Math.max(0,parseFloat(rawVal)||0);
-  simExtras.push({id:'ex'+Date.now(),nome,valore:val});
-  renderSimFisse();refreshRiepilogo();
 }
 
 function runGoalPlanner(){
@@ -645,80 +610,57 @@ function runGoalPlanner(){
   const todayStart=new Date(now.getFullYear(),now.getMonth(),1);
   const targetDate=new Date(gyr,gmo,1);
   if(targetDate<=todayStart){el.innerHTML=`<div style="background:#fee2e2;border-radius:10px;padding:14px;color:var(--red)">⚠️ Data target nel passato.</div>`;return;}
-  const mesiRimanenti=Math.round((targetDate-todayStart)/(1000*60*60*24*30.44));
-  const {saldo,totFisse,entrate}=calcTotali();
-
-  // Analisi fattibilità
-  const altriacc=db.movimenti.filter(m=>{const d=new Date(m.data+'T00:00:00');return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&m.tipo==='accumulo'&&m.obiettivo_id&&m.obiettivo_id!==gid;}).reduce((s,m)=>s+Number(m.importo),0);
-  const margineNetto=Math.max(saldo-altriacc,0);
-
-  // Piano mesi
-  const mesiList=[];
-  for(let i=0;i<mesiRimanenti;i++){let m=now.getMonth()+i,y=now.getFullYear();while(m>11){m-=12;y++;}mesiList.push({m,y,label:MONTHS[m].slice(0,3)+' '+y,saldo:Math.max(saldo,0)});}
-
+  const mesiRim=Math.round((targetDate-todayStart)/(1000*60*60*24*30.44));
+  const {saldo}=calcTotali();
+  const rataAltri=db.obiettivi.filter(g=>g.id!==gid).reduce((tot,g)=>{
+    const aM=db.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id===g.id).reduce((s,m)=>s+Number(m.importo),0);
+    const mancG=Math.max(Number(g.target)-(Math.max(Number(g.accumulato_base)||0,aM)),0);
+    if(mancG<=0||!g.scadenza)return tot;
+    const sc=new Date(g.scadenza+'T00:00:00');
+    const mG=Math.max(1,Math.round((sc-todayStart)/(1000*60*60*24*30.44)));
+    return tot+(mancG/mG);
+  },0);
+  const margine=Math.max(saldo-rataAltri,0);
+  const rata=mancante/mesiRim;
+  const fattibile=rata<=margine;
+  const mesiList=[];for(let i=0;i<mesiRim;i++){let m=now.getMonth()+i,y=now.getFullYear();while(m>11){m-=12;y++;}mesiList.push({m,y,label:MONTHS[m].slice(0,3)+' '+y});}
   let piano=[];
-  if(mode==='fisso'){
-    const rata=mancante/mesiRimanenti;
-    piano=mesiList.map((ms,i)=>({...ms,acc:rata,cumulato:rata*(i+1),fattibile:rata<=ms.saldo}));
-  } else {
-    const totS=mesiList.reduce((s,ms)=>s+ms.saldo,0)||1;
-    let cum=0;
-    piano=mesiList.map(ms=>{
-      if(cum>=mancante)return{...ms,acc:0,cumulato:mancante,fattibile:true};
-      const q=Math.min((ms.saldo/totS)*mancante,mancante-cum);
-      cum+=q;return{...ms,acc:q,cumulato:cum,fattibile:q<=ms.saldo};
-    });
-  }
-  const rata=mode==='fisso'?mancante/mesiRimanenti:Math.max(...piano.map(p=>p.acc));
-  const fattibile=rata<=margineNetto;
-  const statusBg=fattibile?'#dcfce7':'#fee2e2';
-  const statusColor=fattibile?'var(--green)':'var(--red)';
+  if(mode==='fisso'){piano=mesiList.map((ms,i)=>({...ms,acc:rata,cum:rata*(i+1)}));}
+  else{const totS=mesiList.length*Math.max(saldo,1);let cum=0;piano=mesiList.map(ms=>{if(cum>=mancante)return{...ms,acc:0,cum:mancante};const q=Math.min(Math.max(saldo,0),mancante-cum);cum+=q;return{...ms,acc:q,cum};});}
+  const rataMax=mode==='fisso'?rata:Math.max(...piano.map(p=>p.acc));
   el.innerHTML=`
-    <div style="background:${statusBg};border-radius:10px;padding:12px 14px;margin-bottom:12px;font-weight:600;color:${statusColor}">${fattibile?'✅':'⚠️'} ${fattibile?`Fattibile — ti restano ${fmt(margineNetto-rata)}/mese dopo l'accantonamento`:`Difficile — serve ${fmt(rata)}/mese ma il margine disponibile è ${fmt(margineNetto)}/mese`}</div>
+    <div style="background:${fattibile?'#dcfce7':'#fee2e2'};border-radius:10px;padding:12px 14px;margin-bottom:12px;font-weight:600;color:${fattibile?'var(--green)':'var(--red)'}">${fattibile?'✅':'⚠️'} ${fattibile?`Fattibile — dopo l'accantonamento ti restano ${fmt(margine-rata)}/mese`:`Difficile — serve ${fmt(rata)}/mese, margine libero ${fmt(margine)}/mese`}</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
       <div class="sim-sc"><div class="sim-sl">Mancante</div><div class="sim-sv" style="color:var(--purple)">${fmt(mancante)}</div></div>
-      <div class="sim-sc"><div class="sim-sl">Mesi rimasti</div><div class="sim-sv">${mesiRimanenti}</div></div>
+      <div class="sim-sc"><div class="sim-sl">Mesi rimasti</div><div class="sim-sv">${mesiRim}</div></div>
       <div class="sim-sc"><div class="sim-sl">Saldo disponibile</div><div class="sim-sv" style="color:${saldo>=0?'var(--green)':'var(--red)'}">${fmt(saldo)}</div></div>
-      <div class="sim-sc" style="border:2px solid ${fattibile?'#bbf7d0':'#fecaca'}"><div class="sim-sl">${mode==='fisso'?'Rata fissa':'Rata max'}</div><div class="sim-sv" style="color:${fattibile?'var(--green)':'var(--red)'}">${fmt(rata)}</div></div>
+      <div class="sim-sc" style="border:2px solid ${fattibile?'#bbf7d0':'#fecaca'}"><div class="sim-sl">${mode==='fisso'?'Rata fissa':'Rata max'}</div><div class="sim-sv" style="color:${fattibile?'var(--green)':'var(--red)'}">${fmt(rataMax)}</div></div>
     </div>
+    ${rataAltri>0?`<div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--muted-light);border-radius:8px;margin-bottom:10px">ℹ️ Già impegnato verso altri obiettivi: <strong>${fmt(rataAltri)}/mese</strong></div>`:''}
     <div style="display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto">
-      ${piano.map((ms,i)=>`<div style="display:grid;grid-template-columns:80px 1fr 90px 90px;gap:8px;align-items:center;padding:7px 10px;background:${ms.fattibile?'var(--muted-light)':'#fee2e2'};border-radius:7px;font-size:12px">
-        <span style="font-weight:600">${ms.label}</span>
-        <div class="progress-bar" style="height:6px"><div class="progress-fill" style="width:${Math.min(ms.cumulato/mancante*100,100)}%;background:var(--purple)"></div></div>
-        <span style="text-align:right;font-weight:600;color:var(--purple)">${fmt(ms.acc)}</span>
-        <span style="text-align:right;color:var(--muted)">tot: ${fmt(ms.cumulato)}</span>
-      </div>`).join('')}
+      ${piano.map(ms=>`<div style="display:grid;grid-template-columns:80px 1fr 90px 90px;gap:8px;align-items:center;padding:7px 10px;background:${ms.acc>0&&ms.acc>saldo?'#fee2e2':'var(--muted-light)'};border-radius:7px;font-size:12px"><span style="font-weight:600">${ms.label}</span><div class="progress-bar" style="height:6px"><div class="progress-fill" style="width:${Math.min(ms.cum/mancante*100,100)}%;background:var(--purple)"></div></div><span style="text-align:right;font-weight:600;color:var(--purple)">${fmt(ms.acc)}</span><span style="text-align:right;color:var(--muted)">tot: ${fmt(ms.cum)}</span></div>`).join('')}
     </div>`;
 }
 
-async function saveSimulatorState(){
-  const {error}=await sb.from('impostazioni').upsert({chiave:'simulator_state',valore:JSON.stringify({period:simPeriod,values:simValues,extras:simExtras,locks:simLocks})},{onConflict:'chiave'});
-  showToast(error?'Errore salvataggio':'Simulatore salvato ✓',!!error);
+async function simSave(){
+  const {error}=await sb.from('impostazioni').upsert({chiave:'simulator_state',valore:JSON.stringify({period:simPeriod,values:simValues,extras:simExtras,locks:simLocks,freq:simFreq})},{onConflict:'chiave'});
+  showToast(error?'Errore':'Simulatore salvato ✓',!!error);
 }
 
-async function applySimulatorToBudget(){
-  if(!confirm('Aggiornare i budget con i valori del simulatore?'))return;
+async function simApplyBudget(){
+  if(!confirm('Aggiornare i budget?'))return;
   loading(true);
-  const yr=getSimYr(),mo=getSimMo();
-  const ups=[];
-  const addCats=(tipoMov)=>{[...new Set(db.movimenti.filter(m=>m.tipo===tipoMov).map(m=>m.categoria))].forEach(id=>{const v=getSimVal(id,tipoMov);if(v>0)ups.push({anno:yr,mese:mo,categoria_id:id,importo:v});});};
-  addCats('uscita_fissa');addCats('uscita_variabile');
-  if(simPeriod==='annuale'){
-    const allUps=[];
-    for(let m=0;m<12;m++){
-      [...new Set(db.movimenti.filter(x=>x.tipo==='uscita_fissa').map(x=>x.categoria))].forEach(id=>{const v=getSimVal(id,'uscita_fissa');if(v>0)allUps.push({anno:yr,mese:m,categoria_id:id,importo:v});});
-      [...new Set(db.movimenti.filter(x=>x.tipo==='uscita_variabile').map(x=>x.categoria))].forEach(id=>{const v=getSimVal(id,'uscita_variabile');if(v>0)allUps.push({anno:yr,mese:m,categoria_id:id,importo:v});});
-    }
-    if(allUps.length)await sb.from('budget_mensile').upsert(allUps,{onConflict:'anno,mese,categoria_id'});
-  } else {
-    if(ups.length)await sb.from('budget_mensile').upsert(ups,{onConflict:'anno,mese,categoria_id'});
-  }
+  const yr=simYr(),mo=simMo(),ups=[];
+  const addCat=tipo=>[...new Set(db.movimenti.filter(m=>m.tipo===tipo).map(m=>m.categoria))].forEach(id=>{const v=simValMensile(id,tipo);if(v>0)ups.push({anno:yr,mese:mo,categoria_id:id,importo:v});});
+  addCat('uscita_fissa');addCat('uscita_variabile');
+  if(simPeriod==='year'){const allUps=[];for(let m=0;m<12;m++){const addC=tipo=>[...new Set(db.movimenti.filter(x=>x.tipo===tipo).map(x=>x.categoria))].forEach(id=>{const v=simValMensile(id,tipo);if(v>0)allUps.push({anno:yr,mese:m,categoria_id:id,importo:v});});addC('uscita_fissa');addC('uscita_variabile');}if(allUps.length)await sb.from('budget_mensile').upsert(allUps,{onConflict:'anno,mese,categoria_id'});}
+  else{if(ups.length)await sb.from('budget_mensile').upsert(ups,{onConflict:'anno,mese,categoria_id'});}
   const [bm,ba]=await Promise.all([sb.from('budget_mensile').select('*'),sb.from('budget_annuale').select('*')]);
   db.budgetMensile=bm.data||[];db.budgetAnnuale=ba.data||[];
   loading(false);showToast('Budget aggiornati ✓');
 }
 
-// ── MOVIMENTI ────────────────────────────────────────────────────
+// ═══════════════════════ MOVIMENTI ════════════════════════════════
 function renderMovimenti(){
   populateYears();
   const q=(document.getElementById('mov-search').value||'').toLowerCase();
@@ -727,22 +669,11 @@ function renderMovimenti(){
   cf.innerHTML='<option value="">Tutte</option>'+db.categorie.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');cf.value=cv;const fC=cf.value;
   let movs=[...db.movimenti].sort((a,b)=>new Date(b.data)-new Date(a.data));
   if(fM!=='')movs=movs.filter(m=>new Date(m.data+'T00:00:00').getMonth()===parseInt(fM));
-  if(fT)movs=movs.filter(m=>m.tipologia===fT);
-  if(fC)movs=movs.filter(m=>m.categoria===fC);
-  if(fTM)movs=movs.filter(m=>m.tipo===fTM);
+  if(fT)movs=movs.filter(m=>m.tipologia===fT);if(fC)movs=movs.filter(m=>m.categoria===fC);if(fTM)movs=movs.filter(m=>m.tipo===fTM);
   if(q)movs=movs.filter(m=>(m.descrizione||'').toLowerCase().includes(q)||String(m.importo).includes(q)||dStr(m.data).includes(q)||(catById(m.categoria)||{nome:''}).nome.toLowerCase().includes(q));
-  const hasFilter=q||fM!==''||fT||fC||fTM;
-  const totBox=document.getElementById('mov-totals');
-  if(hasFilter&&movs.length){
-    const mf=movs.filter(m=>m.tipo!=='accumulo');
-    const tE=mf.filter(m=>m.tipologia==='entrata').reduce((s,m)=>s+Number(m.importo),0);
-    const tU=mf.filter(m=>m.tipologia==='uscita').reduce((s,m)=>s+Number(m.importo),0);
-    document.getElementById('mov-tot-ent').textContent=fmt(tE);
-    document.getElementById('mov-tot-usc').textContent=fmt(tU);
-    document.getElementById('mov-tot-saldo').textContent=fmt(tE-tU);
-    document.getElementById('mov-totals-count').textContent=`${movs.length} movimenti`;
-    totBox.style.display='block';
-  } else totBox.style.display='none';
+  const hasF=q||fM!==''||fT||fC||fTM;
+  const box=document.getElementById('mov-totals');
+  if(hasF&&movs.length){const mf=movs.filter(m=>m.tipo!=='accumulo');const tE=mf.filter(m=>m.tipologia==='entrata').reduce((s,m)=>s+Number(m.importo),0);const tU=mf.filter(m=>m.tipologia==='uscita').reduce((s,m)=>s+Number(m.importo),0);document.getElementById('mov-tot-ent').textContent=fmt(tE);document.getElementById('mov-tot-usc').textContent=fmt(tU);document.getElementById('mov-tot-saldo').textContent=fmt(tE-tU);document.getElementById('mov-totals-count').textContent=`${movs.length} movimenti`;box.style.display='block';}else box.style.display='none';
   const tbody=document.getElementById('mov-body');const empty=document.getElementById('mov-empty');
   if(!movs.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';
   const TL={entrata:'Entrata',uscita_fissa:'Uscita Fissa',uscita_variabile:'Uscita Var.',accumulo:'Accumulo 2°'};
@@ -752,32 +683,29 @@ function renderMovimenti(){
 
 function openMov(id){
   editMovId=id||null;const m=id?db.movimenti.find(x=>x.id===id):null;
-  document.getElementById('modal-mov-title').textContent=id?'Modifica Movimento':'Nuovo Movimento';
+  document.getElementById('modal-mov-title').textContent=id?'Modifica':'Nuovo Movimento';
   document.getElementById('mov-data').value=m?m.data:new Date().toISOString().split('T')[0];
   document.getElementById('mov-importo').value=m?m.importo:'';
   document.getElementById('mov-tipologia').value=m?m.tipologia:'uscita';
   document.getElementById('mov-desc').value=m?m.descrizione||'':'';
   updateMovForm(m?.categoria,m?.obiettivo_id);
   if(m)document.getElementById('mov-tipo').value=m.tipo;
-  updateMovTipo();
-  document.getElementById('modal-mov').classList.add('open');
+  updateMovTipo();openModal('modal-mov');
 }
 function updateMovForm(selCat,selObj){
   const tipol=document.getElementById('mov-tipologia').value;
-  const cats=db.categorie.filter(c=>c.tipo===tipol||c.tipo==='entrambi');
-  document.getElementById('mov-categoria').innerHTML=cats.map(c=>`<option value="${c.id}"${c.id===selCat?' selected':''}>${c.nome}</option>`).join('');
-  const ts=document.getElementById('mov-tipo');
-  ts.innerHTML=tipol==='entrata'?'<option value="entrata">Entrata</option>':'<option value="uscita_fissa">Uscita Fissa</option><option value="uscita_variabile">Uscita Variabile</option><option value="accumulo">Accumulo 2° conto</option>';
+  document.getElementById('mov-categoria').innerHTML=db.categorie.filter(c=>c.tipo===tipol||c.tipo==='entrambi').map(c=>`<option value="${c.id}"${c.id===selCat?' selected':''}>${c.nome}</option>`).join('');
+  document.getElementById('mov-tipo').innerHTML=tipol==='entrata'?'<option value="entrata">Entrata</option>':'<option value="uscita_fissa">Uscita Fissa</option><option value="uscita_variabile">Uscita Variabile</option><option value="accumulo">Accumulo 2° conto</option>';
   document.getElementById('mov-obiettivo').innerHTML='<option value="">— Nessuno —</option>'+db.obiettivi.map(g=>`<option value="${g.id}"${g.id===selObj?' selected':''}>${g.nome}</option>`).join('');
   updateMovTipo();
 }
 function updateMovTipo(){document.getElementById('obiettivo-group').style.display=document.getElementById('mov-tipo').value==='accumulo'?'flex':'none';}
 async function saveMov(){
   const importo=parseFloat(document.getElementById('mov-importo').value);if(!importo||importo<=0)return alert('Importo non valido');
-  const data_mov=document.getElementById('mov-data').value;if(!data_mov)return alert('Seleziona una data');
+  const dv=document.getElementById('mov-data').value;if(!dv)return alert('Seleziona una data');
   const cat=document.getElementById('mov-categoria').value;if(!cat)return alert('Seleziona una categoria');
   const tipo=document.getElementById('mov-tipo').value;
-  const mov={id:editMovId||'m'+Date.now(),data:data_mov,importo,tipologia:document.getElementById('mov-tipologia').value,categoria:cat,tipo,descrizione:document.getElementById('mov-desc').value||null,obiettivo_id:tipo==='accumulo'?document.getElementById('mov-obiettivo').value||null:null};
+  const mov={id:editMovId||'m'+Date.now(),data:dv,importo,tipologia:document.getElementById('mov-tipologia').value,categoria:cat,tipo,descrizione:document.getElementById('mov-desc').value||null,obiettivo_id:tipo==='accumulo'?document.getElementById('mov-obiettivo').value||null:null};
   loading(true);const {error}=await sb.from('movimenti').upsert(mov,{onConflict:'id'});
   if(error){showToast('Errore',true);loading(false);return;}
   if(editMovId){const i=db.movimenti.findIndex(m=>m.id===editMovId);db.movimenti[i]=mov;}else db.movimenti.unshift(mov);
@@ -790,25 +718,16 @@ async function deleteMov(id){
   db.movimenti=db.movimenti.filter(m=>m.id!==id);loading(false);showToast('Eliminato');renderMovimenti();
 }
 
-// ── SECONDO ──────────────────────────────────────────────────────
-function setSecondoTab(t){
-  secondoTab=t;
-  document.getElementById('s-tab-resoconto').classList.toggle('active',t==='resoconto');
-  document.getElementById('s-tab-obiettivi').classList.toggle('active',t==='obiettivi');
-  document.getElementById('secondo-resoconto').style.display=t==='resoconto'?'block':'none';
-  document.getElementById('secondo-obiettivi').style.display=t==='obiettivi'?'block':'none';
-  if(t==='obiettivi')renderGoals();else renderSecondo();
-}
+// ═══════════════════════ SECONDO ══════════════════════════════════
+function setSecondoTab(t){secondoTab=t;document.getElementById('s-tab-resoconto').classList.toggle('active',t==='resoconto');document.getElementById('s-tab-obiettivi').classList.toggle('active',t==='obiettivi');document.getElementById('secondo-resoconto').style.display=t==='resoconto'?'block':'none';document.getElementById('secondo-obiettivi').style.display=t==='obiettivi'?'block':'none';if(t==='obiettivi')renderGoals();else renderSecondo();}
 function renderSecondo(){
-  populateYears();
-  const yr=parseInt(document.getElementById('secondo-year').value||now.getFullYear());
+  populateYears();const yr=parseInt(document.getElementById('secondo-year').value||now.getFullYear());
   const acc=db.movimenti.filter(m=>m.tipo==='accumulo'&&new Date(m.data+'T00:00:00').getFullYear()===yr);
   document.getElementById('s-totale').textContent=fmt(db.movimenti.filter(m=>m.tipo==='accumulo').reduce((s,m)=>s+Number(m.importo),0));
   document.getElementById('s-mese').textContent=fmt(acc.filter(m=>new Date(m.data+'T00:00:00').getMonth()===now.getMonth()).reduce((s,m)=>s+Number(m.importo),0));
   document.getElementById('s-obiettivi').textContent=fmt(db.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id).reduce((s,m)=>s+Number(m.importo),0));
   const bm2=Array(12).fill(0);acc.forEach(m=>{bm2[new Date(m.data+'T00:00:00').getMonth()]+=Number(m.importo);});
-  if(sBarChart)sBarChart.destroy();
-  sBarChart=new Chart(document.getElementById('secondoBarChart').getContext('2d'),{type:'bar',data:{labels:MONTHS.map(m=>m.slice(0,3)),datasets:[{label:'Accumulo',data:bm2,backgroundColor:'rgba(124,58,237,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'€'+v.toLocaleString('it-IT')}}}}});
+  if(sBarChart)sBarChart.destroy();sBarChart=new Chart(document.getElementById('secondoBarChart').getContext('2d'),{type:'bar',data:{labels:MONTHS.map(m=>m.slice(0,3)),datasets:[{label:'Accumulo',data:bm2,backgroundColor:'rgba(124,58,237,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'€'+v.toLocaleString('it-IT')}}}}});
   const bo={};acc.forEach(m=>{const k=m.obiettivo_id?((db.obiettivi.find(g=>g.id===m.obiettivo_id)||{nome:'?'}).nome):'Generico';bo[k]=(bo[k]||0)+Number(m.importo);});
   const ol=Object.keys(bo),ov=Object.values(bo),oc=COLORS.slice(0,ol.length);
   if(sPieChart)sPieChart.destroy();
@@ -820,28 +739,26 @@ function renderSecondo(){
   tbody.innerHTML=sorted.map(m=>{const goal=m.obiettivo_id?db.obiettivi.find(g=>g.id===m.obiettivo_id):null;return`<tr><td>${dStr(m.data)}</td><td>${m.descrizione||'—'}</td><td>${goal?`<span class="badge badge-purple">${goal.nome}</span>`:'<span style="color:#9ca3af">—</span>'}</td><td style="text-align:right;font-weight:600;color:#7c3aed">+${fmt(m.importo)}</td><td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm btn-ghost" data-action="edit-mov" data-id="${m.id}"><i class="ti ti-edit"></i></button><button class="btn btn-sm btn-danger" data-action="del-mov" data-id="${m.id}"><i class="ti ti-trash"></i></button></div></td></tr>`;}).join('');
 }
 
-// ── OBIETTIVI ────────────────────────────────────────────────────
+// ═══════════════════════ OBIETTIVI ════════════════════════════════
 function renderGoals(){
-  const grid=document.getElementById('goals-grid');const empty=document.getElementById('goals-empty');const sum=document.getElementById('obiettivi-summary');
+  const grid=document.getElementById('goals-grid'),empty=document.getElementById('goals-empty'),sum=document.getElementById('obiettivi-summary');
   if(!db.obiettivi.length){grid.innerHTML='';empty.style.display='block';sum.style.display='none';return;}empty.style.display='none';
   const perObj=db.obiettivi.map(g=>{const a=db.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id===g.id).reduce((s,m)=>s+Number(m.importo),0);return{nome:g.nome,acc:Math.max(Number(g.accumulato_base)||0,a)};});
-  const tot=perObj.reduce((s,o)=>s+o.acc,0);
-  sum.style.display='block';document.getElementById('obs-totale').textContent=fmt(tot);
+  sum.style.display='block';document.getElementById('obs-totale').textContent=fmt(perObj.reduce((s,o)=>s+o.acc,0));
   document.getElementById('obs-dettaglio').textContent=perObj.filter(o=>o.acc>0).map(o=>`${o.nome}: ${fmt(o.acc)}`).join(' · ')||'Nessun versamento';
   grid.innerHTML=db.obiettivi.map(g=>{
-    const accM=db.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id===g.id).reduce((s,m)=>s+Number(m.importo),0);
-    const acc=Math.max(Number(g.accumulato_base)||0,accM);const target=Number(g.target);const pct=Math.min(acc/target*100,100);
-    let scInfo='';
-    if(g.scadenza){const oggi=new Date();oggi.setHours(0,0,0,0);const sc=new Date(g.scadenza+'T00:00:00');const gg=Math.ceil((sc-oggi)/864e5);const col=gg<0?'#dc2626':gg<=30?'#d97706':'#16a34a';const txt=gg<0?`Scaduto da ${Math.abs(gg)}g`:gg===0?'Scade oggi':`Mancano ${gg}g`;scInfo=`<div style="display:flex;align-items:center;gap:5px;font-size:12px;margin-top:3px;color:${col}"><i class="ti ti-calendar-event" style="font-size:13px"></i>${dStr(g.scadenza)} · ${txt}</div>`;}
-    return`<div class="goal-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">${g.nome}</div>${scInfo}</div><div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px"><button class="btn btn-sm btn-ghost" data-action="edit-goal" data-id="${g.id}"><i class="ti ti-edit"></i></button><button class="btn btn-sm btn-danger" data-action="del-goal" data-id="${g.id}"><i class="ti ti-trash"></i></button></div></div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>Accumulato: <strong style="color:#7c3aed">${fmt(acc)}</strong></span><span>Target: <strong>${fmt(target)}</strong></span></div><div class="progress-bar" style="height:12px;margin-bottom:6px"><div class="progress-fill" style="width:${pct}%;background:#7c3aed"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280"><span>${pct.toFixed(1)}%</span><span>Mancano ${fmt(Math.max(target-acc,0))}</span></div>${g.note?`<div style="font-size:12px;color:#9ca3af;margin-top:8px;border-top:1px solid #f3f4f6;padding-top:8px">${g.note}</div>`:''}</div>`;
+    const aM=db.movimenti.filter(m=>m.tipo==='accumulo'&&m.obiettivo_id===g.id).reduce((s,m)=>s+Number(m.importo),0);
+    const acc=Math.max(Number(g.accumulato_base)||0,aM),target=Number(g.target),pct=Math.min(acc/target*100,100);
+    let sc='';if(g.scadenza){const oggi=new Date();oggi.setHours(0,0,0,0);const d=new Date(g.scadenza+'T00:00:00');const gg=Math.ceil((d-oggi)/864e5);const col=gg<0?'#dc2626':gg<=30?'#d97706':'#16a34a';sc=`<div style="font-size:12px;margin-top:3px;color:${col}"><i class="ti ti-calendar-event" style="font-size:13px"></i> ${dStr(g.scadenza)} · ${gg<0?`Scaduto da ${Math.abs(gg)}g`:gg===0?'Scade oggi':`Mancano ${gg}g`}</div>`;}
+    return`<div class="goal-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">${g.nome}</div>${sc}</div><div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px"><button class="btn btn-sm btn-ghost" data-action="edit-goal" data-id="${g.id}"><i class="ti ti-edit"></i></button><button class="btn btn-sm btn-danger" data-action="del-goal" data-id="${g.id}"><i class="ti ti-trash"></i></button></div></div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>Accumulato: <strong style="color:#7c3aed">${fmt(acc)}</strong></span><span>Target: <strong>${fmt(target)}</strong></span></div><div class="progress-bar" style="height:12px;margin-bottom:6px"><div class="progress-fill" style="width:${pct}%;background:#7c3aed"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280"><span>${pct.toFixed(1)}%</span><span>Mancano ${fmt(Math.max(target-acc,0))}</span></div>${g.note?`<div style="font-size:12px;color:#9ca3af;margin-top:8px;border-top:1px solid #f3f4f6;padding-top:8px">${g.note}</div>`:''}</div>`;
   }).join('');
 }
 function openGoal(id){
   editGoalId=id||null;const g=id?db.obiettivi.find(x=>x.id===id):null;
   document.getElementById('modal-goal-title').textContent=id?'Modifica':'Nuovo Obiettivo';
-  document.getElementById('goal-name').value=g?g.nome:'';document.getElementById('goal-target').value=g?g.target:'';
-  document.getElementById('goal-current').value=g?g.accumulato_base||0:0;document.getElementById('goal-deadline').value=g?g.scadenza||'':'';document.getElementById('goal-note').value=g?g.note||'':'';
-  document.getElementById('modal-goal').classList.add('open');
+  ['goal-name','goal-note'].forEach(x=>document.getElementById(x).value=g?g[x.replace('goal-','')]||'':'');
+  document.getElementById('goal-target').value=g?g.target:'';document.getElementById('goal-current').value=g?g.accumulato_base||0:0;document.getElementById('goal-deadline').value=g?g.scadenza||'':'';
+  openModal('modal-goal');
 }
 async function saveGoal(){
   const nome=document.getElementById('goal-name').value.trim();if(!nome)return alert('Inserisci un nome');
@@ -859,22 +776,14 @@ async function deleteGoal(id){
   db.obiettivi=db.obiettivi.filter(g=>g.id!==id);loading(false);showToast('Eliminato');renderGoals();
 }
 
-// ── BUDGET ───────────────────────────────────────────────────────
+// ═══════════════════════ BUDGET ═══════════════════════════════════
 function setBudgetTab(t){budgetTab=t;document.getElementById('budget-tab-mensile').classList.toggle('active',t==='mensile');document.getElementById('budget-tab-annuale').classList.toggle('active',t==='annuale');document.getElementById('budget-mensile-ctrl').style.display=t==='mensile'?'flex':'none';document.getElementById('budget-annuale-ctrl').style.display=t==='annuale'?'flex':'none';renderBudget();}
 function renderBudget(){
-  populateYears();
-  const cats=db.categorie.filter(c=>c.tipo==='uscita'||c.tipo==='entrambi');
-  const grid=document.getElementById('budget-grid');const empty=document.getElementById('budget-empty');
+  populateYears();const cats=db.categorie.filter(c=>c.tipo==='uscita'||c.tipo==='entrambi');
+  const grid=document.getElementById('budget-grid'),empty=document.getElementById('budget-empty');
   if(!cats.length){grid.innerHTML='';empty.style.display='block';return;}empty.style.display='none';
-  if(budgetTab==='mensile'){
-    const mo=parseInt(document.getElementById('budget-month-sel').value),yr=parseInt(document.getElementById('budget-year-sel').value||now.getFullYear());
-    const movs=db.movimenti.filter(m=>{const d=new Date(m.data+'T00:00:00');return d.getMonth()===mo&&d.getFullYear()===yr&&m.tipologia==='uscita'&&m.tipo!=='accumulo';});
-    grid.innerHTML=cats.map(cat=>{const sp=movs.filter(m=>m.categoria===cat.id).reduce((s,m)=>s+Number(m.importo),0);const b=db.budgetMensile.find(r=>r.anno===yr&&r.mese===mo&&r.categoria_id===cat.id);return budgetCard(cat,sp,b?Number(b.importo):0);}).join('');
-  } else {
-    const yr=parseInt(document.getElementById('budget-annual-year-sel').value||now.getFullYear());
-    const movs=db.movimenti.filter(m=>new Date(m.data+'T00:00:00').getFullYear()===yr&&m.tipologia==='uscita'&&m.tipo!=='accumulo');
-    grid.innerHTML=cats.map(cat=>{const sp=movs.filter(m=>m.categoria===cat.id).reduce((s,m)=>s+Number(m.importo),0);const b=db.budgetAnnuale.find(r=>r.anno===yr&&r.categoria_id===cat.id);return budgetCard(cat,sp,b?Number(b.importo):0);}).join('');
-  }
+  if(budgetTab==='mensile'){const mo=parseInt(document.getElementById('budget-month-sel').value),yr=parseInt(document.getElementById('budget-year-sel').value||now.getFullYear());const movs=db.movimenti.filter(m=>{const d=new Date(m.data+'T00:00:00');return d.getMonth()===mo&&d.getFullYear()===yr&&m.tipologia==='uscita'&&m.tipo!=='accumulo';});grid.innerHTML=cats.map(cat=>{const sp=movs.filter(m=>m.categoria===cat.id).reduce((s,m)=>s+Number(m.importo),0);const b=db.budgetMensile.find(r=>r.anno===yr&&r.mese===mo&&r.categoria_id===cat.id);return budgetCard(cat,sp,b?Number(b.importo):0);}).join('');}
+  else{const yr=parseInt(document.getElementById('budget-annual-year-sel').value||now.getFullYear());const movs=db.movimenti.filter(m=>new Date(m.data+'T00:00:00').getFullYear()===yr&&m.tipologia==='uscita'&&m.tipo!=='accumulo');grid.innerHTML=cats.map(cat=>{const sp=movs.filter(m=>m.categoria===cat.id).reduce((s,m)=>s+Number(m.importo),0);const b=db.budgetAnnuale.find(r=>r.anno===yr&&r.categoria_id===cat.id);return budgetCard(cat,sp,b?Number(b.importo):0);}).join('');}
 }
 function budgetCard(cat,speso,budget){
   const pct=budget>0?Math.min(speso/budget*100,100):0,over=budget>0&&speso>budget,near=budget>0&&pct>=80&&!over;
@@ -883,40 +792,18 @@ function budgetCard(cat,speso,budget){
 }
 function openBudgetEdit(){
   const cats=db.categorie.filter(c=>c.tipo==='uscita'||c.tipo==='entrambi');
-  if(budgetTab==='mensile'){
-    const mo=parseInt(document.getElementById('budget-month-sel').value),yr=parseInt(document.getElementById('budget-year-sel').value||now.getFullYear());
-    document.getElementById('modal-budget-title').textContent='Budget Mensile — '+MONTHS[mo]+' '+yr;
-    document.getElementById('modal-budget-desc').textContent='Lascia vuoto per rimuovere il budget.';
-    document.getElementById('budget-form-list').innerHTML=cats.map(cat=>{const b=db.budgetMensile.find(r=>r.anno===yr&&r.mese===mo&&r.categoria_id===cat.id);return`<div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:13px;font-weight:500"><span class="dot" style="background:${cat.colore};margin-right:6px"></span>${cat.nome}</span><input type="number" step="0.01" min="0" placeholder="€" value="${b?b.importo:''}" data-cat="${cat.id}" style="width:120px"><button class="btn btn-ghost btn-sm" data-action="reset-budget-input">Azzera</button></div>`;}).join('');
-  } else {
-    const yr=parseInt(document.getElementById('budget-annual-year-sel').value||now.getFullYear());
-    document.getElementById('modal-budget-title').textContent='Budget Annuale — '+yr;
-    document.getElementById('modal-budget-desc').textContent='Lascia vuoto per rimuovere il budget.';
-    document.getElementById('budget-form-list').innerHTML=cats.map(cat=>{const b=db.budgetAnnuale.find(r=>r.anno===yr&&r.categoria_id===cat.id);return`<div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:13px;font-weight:500"><span class="dot" style="background:${cat.colore};margin-right:6px"></span>${cat.nome}</span><input type="number" step="0.01" min="0" placeholder="€" value="${b?b.importo:''}" data-cat="${cat.id}" style="width:120px"><button class="btn btn-ghost btn-sm" data-action="reset-budget-input">Azzera</button></div>`;}).join('');
-  }
-  document.getElementById('modal-budget').classList.add('open');
+  if(budgetTab==='mensile'){const mo=parseInt(document.getElementById('budget-month-sel').value),yr=parseInt(document.getElementById('budget-year-sel').value||now.getFullYear());document.getElementById('modal-budget-title').textContent='Budget Mensile — '+MONTHS[mo]+' '+yr;document.getElementById('modal-budget-desc').textContent='Lascia vuoto per rimuovere.';document.getElementById('budget-form-list').innerHTML=cats.map(cat=>{const b=db.budgetMensile.find(r=>r.anno===yr&&r.mese===mo&&r.categoria_id===cat.id);return`<div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:13px;font-weight:500"><span class="dot" style="background:${cat.colore};margin-right:6px"></span>${cat.nome}</span><input type="number" step="0.01" min="0" placeholder="€" value="${b?b.importo:''}" data-cat="${cat.id}" style="width:120px"><button class="btn btn-ghost btn-sm" data-action="reset-budget-input">Azzera</button></div>`;}).join('');}
+  else{const yr=parseInt(document.getElementById('budget-annual-year-sel').value||now.getFullYear());document.getElementById('modal-budget-title').textContent='Budget Annuale — '+yr;document.getElementById('modal-budget-desc').textContent='Lascia vuoto per rimuovere.';document.getElementById('budget-form-list').innerHTML=cats.map(cat=>{const b=db.budgetAnnuale.find(r=>r.anno===yr&&r.categoria_id===cat.id);return`<div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:13px;font-weight:500"><span class="dot" style="background:${cat.colore};margin-right:6px"></span>${cat.nome}</span><input type="number" step="0.01" min="0" placeholder="€" value="${b?b.importo:''}" data-cat="${cat.id}" style="width:120px"><button class="btn btn-ghost btn-sm" data-action="reset-budget-input">Azzera</button></div>`;}).join('');}
+  openModal('modal-budget');
 }
 async function saveBudget(){
   loading(true);
-  if(budgetTab==='mensile'){
-    const mo=parseInt(document.getElementById('budget-month-sel').value),yr=parseInt(document.getElementById('budget-year-sel').value||now.getFullYear());
-    const ups=[],dels=[];
-    document.querySelectorAll('#budget-form-list input[type=number]').forEach(inp=>{const v=parseFloat(inp.value);if(v>0)ups.push({anno:yr,mese:mo,categoria_id:inp.dataset.cat,importo:v});else dels.push(inp.dataset.cat);});
-    if(ups.length)await sb.from('budget_mensile').upsert(ups,{onConflict:'anno,mese,categoria_id'});
-    for(const c of dels)await sb.from('budget_mensile').delete().match({anno:yr,mese:mo,categoria_id:c});
-    const {data:bm}=await sb.from('budget_mensile').select('*');db.budgetMensile=bm||[];
-  } else {
-    const yr=parseInt(document.getElementById('budget-annual-year-sel').value||now.getFullYear());
-    const ups=[],dels=[];
-    document.querySelectorAll('#budget-form-list input[type=number]').forEach(inp=>{const v=parseFloat(inp.value);if(v>0)ups.push({anno:yr,categoria_id:inp.dataset.cat,importo:v});else dels.push(inp.dataset.cat);});
-    if(ups.length)await sb.from('budget_annuale').upsert(ups,{onConflict:'anno,categoria_id'});
-    for(const c of dels)await sb.from('budget_annuale').delete().match({anno:yr,categoria_id:c});
-    const {data:ba}=await sb.from('budget_annuale').select('*');db.budgetAnnuale=ba||[];
-  }
+  if(budgetTab==='mensile'){const mo=parseInt(document.getElementById('budget-month-sel').value),yr=parseInt(document.getElementById('budget-year-sel').value||now.getFullYear());const ups=[],dels=[];document.querySelectorAll('#budget-form-list input[type=number]').forEach(inp=>{const v=parseFloat(inp.value);if(v>0)ups.push({anno:yr,mese:mo,categoria_id:inp.dataset.cat,importo:v});else dels.push(inp.dataset.cat);});if(ups.length)await sb.from('budget_mensile').upsert(ups,{onConflict:'anno,mese,categoria_id'});for(const c of dels)await sb.from('budget_mensile').delete().match({anno:yr,mese:mo,categoria_id:c});const {data:bm}=await sb.from('budget_mensile').select('*');db.budgetMensile=bm||[];}
+  else{const yr=parseInt(document.getElementById('budget-annual-year-sel').value||now.getFullYear());const ups=[],dels=[];document.querySelectorAll('#budget-form-list input[type=number]').forEach(inp=>{const v=parseFloat(inp.value);if(v>0)ups.push({anno:yr,categoria_id:inp.dataset.cat,importo:v});else dels.push(inp.dataset.cat);});if(ups.length)await sb.from('budget_annuale').upsert(ups,{onConflict:'anno,categoria_id'});for(const c of dels)await sb.from('budget_annuale').delete().match({anno:yr,categoria_id:c});const {data:ba}=await sb.from('budget_annuale').select('*');db.budgetAnnuale=ba||[];}
   loading(false);closeModal('modal-budget');showToast('Budget salvato ✓');renderBudget();
 }
 
-// ── CATEGORIE ────────────────────────────────────────────────────
+// ═══════════════════════ CATEGORIE ════════════════════════════════
 function renderCategorie(){
   const groups={entrata:[],uscita:[],entrambi:[]};db.categorie.forEach(c=>(groups[c.tipo]||groups.entrambi).push(c));
   const rg=(lbl,cats)=>cats.length?`<div class="section-divider">${lbl}</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${cats.map(c=>`<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--muted-light);border:1px solid var(--border);border-radius:20px;font-size:13px"><span class="dot" style="background:${c.colore}"></span>${c.nome}<button data-action="edit-cat" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;font-size:12px"><i class="ti ti-edit"></i></button><button data-action="del-cat" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:0;font-size:14px">×</button></span>`).join('')}</div>`:'';
@@ -928,27 +815,24 @@ async function addCategory(){
   const cat={id:'c'+Date.now(),nome,tipo:document.getElementById('new-cat-tipo').value,colore:document.getElementById('new-cat-color').value};
   loading(true);const {error}=await sb.from('categorie').insert(cat);
   if(error){showToast('Errore',true);loading(false);return;}
-  db.categorie.push(cat);db.categorie.sort((a,b)=>a.nome.localeCompare(b.nome));
-  document.getElementById('new-cat-name').value='';loading(false);showToast('Aggiunta ✓');renderCategorie();
+  db.categorie.push(cat);db.categorie.sort((a,b)=>a.nome.localeCompare(b.nome));document.getElementById('new-cat-name').value='';loading(false);showToast('Aggiunta ✓');renderCategorie();
 }
-function openEditCat(id){const c=db.categorie.find(x=>x.id===id);if(!c)return;document.getElementById('edit-cat-id').value=id;document.getElementById('edit-cat-name').value=c.nome;document.getElementById('edit-cat-tipo').value=c.tipo;document.getElementById('edit-cat-color').value=c.colore;document.getElementById('modal-cat').classList.add('open');}
+function openEditCat(id){const c=db.categorie.find(x=>x.id===id);if(!c)return;document.getElementById('edit-cat-id').value=id;document.getElementById('edit-cat-name').value=c.nome;document.getElementById('edit-cat-tipo').value=c.tipo;document.getElementById('edit-cat-color').value=c.colore;openModal('modal-cat');}
 async function saveEditCat(){
   const id=document.getElementById('edit-cat-id').value,i=db.categorie.findIndex(c=>c.id===id);if(i<0)return;
   const nome=document.getElementById('edit-cat-name').value.trim();if(!nome)return alert('Inserisci un nome');
   const u={...db.categorie[i],nome,tipo:document.getElementById('edit-cat-tipo').value,colore:document.getElementById('edit-cat-color').value};
   loading(true);const {error}=await sb.from('categorie').update({nome:u.nome,tipo:u.tipo,colore:u.colore}).eq('id',id);
-  if(error){showToast('Errore',true);loading(false);return;}
-  db.categorie[i]=u;loading(false);closeModal('modal-cat');showToast('Aggiornata ✓');renderCategorie();
+  if(error){showToast('Errore',true);loading(false);return;}db.categorie[i]=u;loading(false);closeModal('modal-cat');showToast('Aggiornata ✓');renderCategorie();
 }
 async function deleteCat(id){
   if(db.movimenti.some(m=>m.categoria===id))return alert('Categoria in uso.');
   loading(true);const {error}=await sb.from('categorie').delete().eq('id',id);
-  if(error){showToast('Errore',true);loading(false);return;}
-  db.categorie=db.categorie.filter(c=>c.id!==id);loading(false);showToast('Eliminata');renderCategorie();
+  if(error){showToast('Errore',true);loading(false);return;}db.categorie=db.categorie.filter(c=>c.id!==id);loading(false);showToast('Eliminata');renderCategorie();
 }
 
-// ── PDF ──────────────────────────────────────────────────────────
-function openPdfModal(){populateYears(['pdf-year']);document.getElementById('pdf-month').value=now.getMonth();document.getElementById('modal-pdf').classList.add('open');}
+// ═══════════════════════ PDF ══════════════════════════════════════
+function openPdfModal(){populateYears(['pdf-year']);document.getElementById('pdf-month').value=now.getMonth();openModal('modal-pdf');}
 function updatePdfFields(){document.getElementById('pdf-month-group').style.display=document.getElementById('pdf-tipo').value==='mensile'?'block':'none';}
 function generatePdf(){
   const tipo=document.getElementById('pdf-tipo').value,year=parseInt(document.getElementById('pdf-year').value),month=tipo==='mensile'?parseInt(document.getElementById('pdf-month').value):null;
@@ -960,64 +844,115 @@ function generatePdf(){
   const bc={};movs.filter(m=>m.tipologia==='uscita').forEach(m=>{bc[m.categoria]=(bc[m.categoria]||0)+Number(m.importo);});
   const catRows=Object.entries(bc).sort((a,b)=>b[1]-a[1]).map(([id,tot])=>`<tr><td>${(catById(id)||{nome:id}).nome}</td><td style="text-align:right;color:#dc2626">${fmt(tot)}</td><td style="text-align:right">${usc>0?(tot/usc*100).toFixed(1)+'%':''}</td></tr>`).join('');
   const movRows=[...movs].sort((a,b)=>new Date(a.data)-new Date(b.data)).map(m=>`<tr><td>${dStr(m.data)}</td><td>${(catById(m.categoria)||{nome:'—'}).nome}</td><td>${m.descrizione||'—'}</td><td style="text-align:right;color:${m.tipologia==='entrata'?'#16a34a':'#dc2626'};font-weight:600">${m.tipologia==='entrata'?'+':'−'}${fmt(m.importo)}</td></tr>`).join('');
-  const accTot=db.movimenti.filter(m=>{const d=new Date(m.data+'T00:00:00');if(d.getFullYear()!==year)return false;if(tipo==='mensile'&&d.getMonth()!==month)return false;return m.tipo==='accumulo';}).reduce((s,m)=>s+Number(m.importo),0);
-  const html=`<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><title>Resoconto ${periodLabel}</title><style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a2e;max-width:800px;margin:0 auto;padding:24px}h1{font-size:22px;margin-bottom:4px}.subtitle{color:#6b7280;font-size:14px;margin-bottom:24px}.kpi-row{display:flex;gap:16px;margin-bottom:24px}.kpi{flex:1;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px;text-align:center}.kpi-lbl{font-size:11px;color:#6b7280;margin-bottom:4px}.kpi-val{font-size:20px;font-weight:700}.green{color:#16a34a}.red{color:#dc2626}.blue{color:#4f46e5}.amber{color:#d97706}.purple{color:#7c3aed}h2{font-size:16px;margin:20px 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:6px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#f3f4f6;padding:8px 10px;text-align:left;font-size:12px;color:#6b7280;border-bottom:2px solid #e5e7eb}td{padding:7px 10px;border-bottom:1px solid #f3f4f6;font-size:12px}tr:nth-child(even) td{background:#fafafa}.footer{margin-top:32px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:10px;display:flex;justify-content:space-between}</style></head><body><h1>Resoconto Finanziario</h1><div class="subtitle">${periodLabel} · Generato il ${new Date().toLocaleDateString('it-IT')}</div><div class="kpi-row"><div class="kpi"><div class="kpi-lbl">Entrate</div><div class="kpi-val green">${fmt(ent)}</div></div><div class="kpi"><div class="kpi-lbl">Uscite</div><div class="kpi-val red">${fmt(usc)}</div></div><div class="kpi"><div class="kpi-lbl">Saldo</div><div class="kpi-val ${sal>=0?'blue':'red'}">${fmt(sal)}</div></div><div class="kpi"><div class="kpi-lbl">Tasso Risparmio</div><div class="kpi-val amber">${sav.toFixed(1)}%</div></div>${accTot>0?`<div class="kpi"><div class="kpi-lbl">Accumulo 2° conto</div><div class="kpi-val purple">${fmt(accTot)}</div></div>`:''}</div><h2>Uscite per categoria</h2><table><thead><tr><th>Categoria</th><th style="text-align:right">Totale</th><th style="text-align:right">%</th></tr></thead><tbody>${catRows||'<tr><td colspan="3" style="text-align:center;color:#9ca3af">Nessuna uscita</td></tr>'}</tbody></table><h2>Dettaglio movimenti</h2><table><thead><tr><th>Data</th><th>Categoria</th><th>Descrizione</th><th style="text-align:right">Importo</th></tr></thead><tbody>${movRows||'<tr><td colspan="4" style="text-align:center;color:#9ca3af">Nessun movimento</td></tr>'}</tbody></table><div class="footer"><span>Resoconto Finanziario Personale</span><span>${periodLabel}</span></div><script>window.onload=()=>window.print()<\/script></body></html>`;
-  const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}else alert('Abilita i popup per il PDF.');
-  closeModal('modal-pdf');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Resoconto ${periodLabel}</title><style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a2e;max-width:800px;margin:0 auto;padding:24px}h1{font-size:22px;margin-bottom:4px}.sub{color:#6b7280;font-size:14px;margin-bottom:24px}.kr{display:flex;gap:16px;margin-bottom:24px}.k{flex:1;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px;text-align:center}.kl{font-size:11px;color:#6b7280;margin-bottom:4px}.kv{font-size:20px;font-weight:700}.g{color:#16a34a}.r{color:#dc2626}.b{color:#4f46e5}.a{color:#d97706}h2{font-size:16px;margin:20px 0 10px;border-bottom:2px solid #e5e7eb;padding-bottom:6px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#f3f4f6;padding:8px 10px;text-align:left;font-size:12px;color:#6b7280;border-bottom:2px solid #e5e7eb}td{padding:7px 10px;border-bottom:1px solid #f3f4f6;font-size:12px}.foot{margin-top:32px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:10px;display:flex;justify-content:space-between}</style></head><body><h1>Resoconto Finanziario</h1><div class="sub">${periodLabel} · ${new Date().toLocaleDateString('it-IT')}</div><div class="kr"><div class="k"><div class="kl">Entrate</div><div class="kv g">${fmt(ent)}</div></div><div class="k"><div class="kl">Uscite</div><div class="kv r">${fmt(usc)}</div></div><div class="k"><div class="kl">Saldo</div><div class="kv ${sal>=0?'b':'r'}">${fmt(sal)}</div></div><div class="k"><div class="kl">Risparmio</div><div class="kv a">${sav.toFixed(1)}%</div></div></div><h2>Uscite per categoria</h2><table><thead><tr><th>Categoria</th><th style="text-align:right">Totale</th><th style="text-align:right">%</th></tr></thead><tbody>${catRows}</tbody></table><h2>Movimenti</h2><table><thead><tr><th>Data</th><th>Categoria</th><th>Descrizione</th><th style="text-align:right">Importo</th></tr></thead><tbody>${movRows}</tbody></table><div class="foot"><span>Resoconto Finanziario Personale</span><span>${periodLabel}</span></div><script>window.onload=()=>window.print()<\/script></body></html>`;
+  const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}else alert('Abilita i popup per il PDF.');closeModal('modal-pdf');
 }
-
 function exportData(){const b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='finanze_'+new Date().toISOString().split('T')[0]+'.json';a.click();}
 
-// ── EVENTI DELEGATI ───────────────────────────────────────────────
-document.body.addEventListener('click',async function(e){
+// ═══════════════════════ EVENT DELEGATION UNICO ═══════════════════
+document.body.addEventListener('click',async e=>{
+  // slider e input non passano da qui
   const btn=e.target.closest('[data-action]');if(!btn)return;
-  const action=btn.dataset.action,id=btn.dataset.id;
-  if(action==='del-mov')deleteMov(id);
-  else if(action==='edit-mov')openMov(id);
-  else if(action==='del-goal')deleteGoal(id);
-  else if(action==='edit-goal')openGoal(id);
-  else if(action==='edit-cat')openEditCat(id);
-  else if(action==='del-cat')deleteCat(id);
-  else if(action==='reset-budget-input'){const inp=btn.closest('div').querySelector('input[type=number]');if(inp)inp.value='';}
-  else if(action==='toggle-sim-lock'){
-    const key=btn.dataset.key;simLocks[key]=!simLocks[key];renderSimulator();
+  const a=btn.dataset.action,id=btn.dataset.id;
+  // Nav
+  if(a==='set-period'){currentPeriod=btn.dataset.val;document.getElementById('seg-annual').classList.toggle('active',btn.dataset.val==='annual');document.getElementById('seg-month').classList.toggle('active',btn.dataset.val==='month');document.getElementById('month-select').style.display=btn.dataset.val==='month'?'block':'none';renderDashboard();}
+  else if(a==='set-pie-side'){pieSide=btn.dataset.val;document.getElementById('pie-seg-usc').classList.toggle('active',btn.dataset.val==='uscite');document.getElementById('pie-seg-ent').classList.toggle('active',btn.dataset.val==='entrate');renderDashboard();}
+  else if(a==='set-pie-fmt'){pieFormat=btn.dataset.val;document.getElementById('pie-fmt-pct').classList.toggle('active',btn.dataset.val==='pct');document.getElementById('pie-fmt-eur').classList.toggle('active',btn.dataset.val==='eur');renderDashboard();}
+  else if(a==='render-dashboard')renderDashboard();
+  else if(a==='render-recent')renderRecent();
+  else if(a==='open-pdf')openPdfModal();
+  else if(a==='update-pdf-fields')updatePdfFields();
+  else if(a==='generate-pdf')generatePdf();
+  // Movimenti
+  else if(a==='open-mov')openMov(null);
+  else if(a==='edit-mov')openMov(id);
+  else if(a==='del-mov')deleteMov(id);
+  else if(a==='save-mov')saveMov();
+  else if(a==='update-mov-form')updateMovForm(null,null);
+  else if(a==='update-mov-tipo')updateMovTipo();
+  else if(a==='clear-search'){document.getElementById('mov-search').value='';renderMovimenti();}
+  else if(a==='render-movimenti')renderMovimenti();
+  // Secondo
+  else if(a==='set-secondo-tab')setSecondoTab(btn.dataset.val);
+  else if(a==='render-secondo')renderSecondo();
+  // Obiettivi
+  else if(a==='open-goal')openGoal(null);
+  else if(a==='edit-goal')openGoal(id);
+  else if(a==='del-goal')deleteGoal(id);
+  else if(a==='save-goal')saveGoal();
+  // Budget
+  else if(a==='set-budget-tab')setBudgetTab(btn.dataset.val);
+  else if(a==='open-budget-edit')openBudgetEdit();
+  else if(a==='save-budget')saveBudget();
+  else if(a==='render-budget')renderBudget();
+  else if(a==='reset-budget-input'){const inp=btn.closest('div').querySelector('input[type=number]');if(inp)inp.value='';}
+  // Categorie
+  else if(a==='add-category')addCategory();
+  else if(a==='edit-cat')openEditCat(id);
+  else if(a==='del-cat')deleteCat(id);
+  else if(a==='save-edit-cat')saveEditCat();
+  // Modal
+  else if(a==='close-modal')closeModal(btn.dataset.modal);
+  // Dati
+  else if(a==='export-data')exportData();
+  // Nav labels
+  else if(a==='save-nav-label'){const pid=btn.dataset.pageId;const inp=btn.closest('div').querySelector('input');const val=inp.value.trim()||CORE_PAGES.find(p=>p.id===pid)?.label||pid;db.navLabels[pid]=val;const {error}=await sb.from('impostazioni').upsert({chiave:'nav_labels',valore:JSON.stringify(db.navLabels)},{onConflict:'chiave'});if(error){showToast('Errore',true);return;}updateNavBtn(pid,val);showToast('Nome aggiornato ✓');}
+  else if(a==='reset-nav-label'){const pid=btn.dataset.pageId;const def=CORE_PAGES.find(p=>p.id===pid)?.label||pid;delete db.navLabels[pid];await sb.from('impostazioni').upsert({chiave:'nav_labels',valore:JSON.stringify(db.navLabels)},{onConflict:'chiave'});updateNavBtn(pid,def);btn.closest('div').querySelector('input').value=def;showToast('Ripristinato');}
+  // Simulatore
+  else if(a==='set-sim-period'){simPeriod=btn.dataset.val;document.getElementById('sim-period-month').classList.toggle('active',btn.dataset.val==='month');document.getElementById('sim-period-year').classList.toggle('active',btn.dataset.val==='year');document.getElementById('sim-month-sel').style.display=btn.dataset.val==='month'?'':'none';renderSim();}
+  else if(a==='render-sim')renderSim();
+  else if(a==='set-sim-tab'){simTab=btn.dataset.val;['fisse','variabili','obiettivo'].forEach(x=>{document.getElementById('sim-tab-'+x).classList.toggle('active',x===btn.dataset.val);document.getElementById('sim-content-'+x).style.display=x===btn.dataset.val?'block':'none';});renderSim();}
+  else if(a==='sim-reset'){simValues={};simExtras=[];simLocks={};simFreq={};renderSim();}
+  else if(a==='sim-save')simSave();
+  else if(a==='sim-apply-budget')simApplyBudget();
+  else if(a==='sim-add-extra'){const nome=window.prompt('Nome voce (es. Affitto):');if(!nome)return;const rawV=window.prompt('Importo (€):');if(rawV===null)return;const rawF=window.prompt('Mensile (M) o Annuale (A)?','M');const val=Math.max(0,parseFloat(rawV)||0);const freq=(rawF||'M').toUpperCase()==='A'?'A':'M';simExtras.push({id:'ex'+Date.now(),nome,valore:val,freq});renderSimFisse();renderSimRiepilogo();}
+  else if(a==='toggle-sim-lock'){const key=btn.dataset.key;simLocks[key]=!simLocks[key];renderSim();}
+  else if(a==='set-freq'){const key=btn.dataset.key;const isExtra=btn.dataset.isExtra==='true';const freq=btn.dataset.val;if(isExtra){const e=simExtras.find(x=>x.id===key);if(e)e.freq=freq;}else{simFreq[key]=freq;}if(simTab==='fisse')renderSimFisse();else renderSimVar();renderSimRiepilogo();}
+  else if(a==='run-goal-planner')runGoalPlanner();
+});
+
+// Slider e input del simulatore — gestiti con oninput via input event
+document.body.addEventListener('input',e=>{
+  const el=e.target;
+  // slider entrate
+  if(el.dataset.simType==='entrate'){const val=parseFloat(el.value)||0;simValues['__ent']=val;renderSimEntrate();renderSimRiepilogo();return;}
+  // slider/input righe simulatore
+  if(el.classList.contains('sim-slider')||el.classList.contains('sim-input')){
+    const val=Math.max(0,parseFloat(el.value)||0);
+    const freq=el.dataset.freq||'M';
+    if(el.dataset.extraId){const ex=simExtras.find(x=>x.id===el.dataset.extraId);if(ex){ex.valore=val;ex.freq=freq;}}
+    else if(el.dataset.catId){simValues[el.dataset.catId]=val;simFreq[el.dataset.catId]=freq;}
+    syncSimPair(el,val,freq);
+    renderSimRiepilogo();updateSimTotale();
+    return;
   }
-  else if(action==='remove-extra'){
-    simExtras=simExtras.filter(ex=>ex.id!==btn.dataset.id);renderSimFisse();refreshRiepilogo();
-  }
-  else if(action==='save-nav-label'){
-    const pid=btn.dataset.pageId;
-    const inp=btn.closest('div').querySelector('input');
-    const val=inp.value.trim()||CORE_PAGES.find(p=>p.id===pid)?.label||pid;
-    db.navLabels[pid]=val;
-    const {error}=await sb.from('impostazioni').upsert({chiave:'nav_labels',valore:JSON.stringify(db.navLabels)},{onConflict:'chiave'});
-    if(error){showToast('Errore',true);return;}
-    updateNavBtn(pid,val);showToast('Nome aggiornato ✓');
-  }
-  else if(action==='reset-nav-label'){
-    const pid=btn.dataset.pageId;
-    const def=CORE_PAGES.find(p=>p.id===pid)?.label||pid;
-    delete db.navLabels[pid];
-    await sb.from('impostazioni').upsert({chiave:'nav_labels',valore:JSON.stringify(db.navLabels)},{onConflict:'chiave'});
-    updateNavBtn(pid,def);btn.closest('div').querySelector('input').value=def;showToast('Ripristinato');
-  }
+  // Select con data-action
+  if(el.dataset.action==='render-dashboard')renderDashboard();
+  else if(el.dataset.action==='render-movimenti')renderMovimenti();
+  else if(el.dataset.action==='render-budget')renderBudget();
+  else if(el.dataset.action==='render-secondo')renderSecondo();
+  else if(el.dataset.action==='render-recent')renderRecent();
+  else if(el.dataset.action==='render-sim')renderSim();
+  else if(el.dataset.action==='update-mov-form')updateMovForm(null,null);
+  else if(el.dataset.action==='update-mov-tipo')updateMovTipo();
+  else if(el.dataset.action==='update-pdf-fields')updatePdfFields();
 });
 
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
-// ── INIT ─────────────────────────────────────────────────────────
+// INIT
 (async()=>{
   await loadAll();
   CORE_PAGES.forEach(p=>{const lbl=db.navLabels[p.id];if(lbl)updateNavBtn(p.id,lbl);});
+  populateYears();
+  document.getElementById('month-select').innerHTML=MONTHS.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
   document.getElementById('month-select').value=now.getMonth();
   document.getElementById('budget-month-sel').value=now.getMonth();
   document.getElementById('sim-month-sel').value=now.getMonth();
   document.getElementById('sim-period-month').classList.toggle('active',simPeriod==='month');
   document.getElementById('sim-period-year').classList.toggle('active',simPeriod==='year');
   document.getElementById('sim-month-sel').style.display=simPeriod==='month'?'':'none';
-  populateYears(['sim-year-sel','sim-goal-year','pdf-year','budget-year-sel','budget-annual-year-sel','secondo-year']);
-  const gs=document.getElementById('sim-goal-sel');
-  gs.innerHTML='<option value="">— Seleziona —</option>'+db.obiettivi.map(g=>`<option value="${g.id}">${g.nome}</option>`).join('');
+  document.getElementById('sim-goal-sel').innerHTML='<option value="">— Seleziona —</option>'+db.obiettivi.map(g=>`<option value="${g.id}">${g.nome}</option>`).join('');
   renderDashboard();
 })();
 </script>
