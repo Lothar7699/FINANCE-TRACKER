@@ -73,6 +73,7 @@ tr:hover td{background:#fafafa}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border-radius:16px;padding:24px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto}
 .modal h3{margin-bottom:16px}.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+#tr-toggle:has(input:checked){background:#f3f0ff;border-color:#7c3aed;color:#7c3aed}
 .empty{text-align:center;padding:40px;color:#9ca3af;font-size:14px}
 .empty i{font-size:40px;display:block;margin-bottom:8px}
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
@@ -347,7 +348,7 @@ tr:hover td{background:#fafafa}
 </div>
 
 <!-- MODALS -->
-<div class="modal-overlay" id="modal-mov"><div class="modal"><h3 id="modal-mov-title">Nuovo Movimento</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group"><label>Data</label><input type="date" id="mov-data"></div><div class="form-group"><label>Importo (€)</label><input type="number" id="mov-importo" step="0.01" min="0"></div><div class="form-group"><label>Tipologia</label><select id="mov-tipologia" data-action="update-mov-form"><option value="entrata">Entrata</option><option value="uscita">Uscita</option></select></div><div class="form-group"><label>Categoria</label><select id="mov-categoria"></select></div><div class="form-group"><label>Tipo</label><select id="mov-tipo" data-action="update-mov-tipo"></select></div><div class="form-group" id="obiettivo-group" style="display:none"><label>Obiettivo</label><select id="mov-obiettivo"><option value="">— Nessuno —</option></select></div><div class="form-group" style="grid-column:1/-1"><label>Descrizione</label><input type="text" id="mov-desc"></div></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-mov">Annulla</button><button class="btn btn-primary" data-action="save-mov">Salva</button></div></div></div>
+<div class="modal-overlay" id="modal-mov"><div class="modal"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 id="modal-mov-title" style="margin:0">Nuovo Movimento</h3><label id="tr-toggle" style="display:none;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;padding:6px 12px;border:1px solid var(--border);border-radius:8px;user-select:none"><input type="checkbox" id="mov-tr" style="accent-color:#7c3aed;width:16px;height:16px;cursor:pointer"><i class="ti ti-building-bank" style="color:#7c3aed;font-size:15px"></i>Trade Republic</label></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group"><label>Data</label><input type="date" id="mov-data"></div><div class="form-group"><label>Importo (€)</label><input type="number" id="mov-importo" step="0.01" min="0"></div><div class="form-group"><label>Tipologia</label><select id="mov-tipologia" data-action="update-mov-form"><option value="entrata">Entrata</option><option value="uscita">Uscita</option></select></div><div class="form-group"><label>Categoria</label><select id="mov-categoria"></select></div><div class="form-group"><label>Tipo</label><select id="mov-tipo" data-action="update-mov-tipo"></select></div><div class="form-group" id="obiettivo-group" style="display:none"><label>Obiettivo</label><select id="mov-obiettivo"><option value="">— Nessuno —</option></select></div><div class="form-group" style="grid-column:1/-1"><label>Descrizione</label><input type="text" id="mov-desc"></div></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-mov">Annulla</button><button class="btn btn-primary" data-action="save-mov">Salva</button></div></div></div>
 <div class="modal-overlay" id="modal-budget"><div class="modal"><h3 id="modal-budget-title">Imposta Budget</h3><p style="font-size:13px;color:var(--muted);margin-bottom:12px" id="modal-budget-desc"></p><div id="budget-form-list" style="display:flex;flex-direction:column;gap:10px;max-height:350px;overflow-y:auto"></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-budget">Annulla</button><button class="btn btn-primary" data-action="save-budget">Salva</button></div></div></div>
 <div class="modal-overlay" id="modal-goal"><div class="modal"><h3 id="modal-goal-title">Nuovo Obiettivo</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group" style="grid-column:1/-1"><label>Nome</label><input type="text" id="goal-name"></div><div class="form-group"><label>Target (€)</label><input type="number" id="goal-target" step="0.01" min="0"></div><div class="form-group"><label>Già accumulato (€)</label><input type="number" id="goal-current" step="0.01" min="0" value="0"></div><div class="form-group"><label>Scadenza</label><input type="date" id="goal-deadline"></div><div class="form-group"><label>Note</label><input type="text" id="goal-note"></div></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-goal">Annulla</button><button class="btn btn-primary" data-action="save-goal">Salva</button></div></div></div>
 <div class="modal-overlay" id="modal-cat"><div class="modal"><h3>Modifica Categoria</h3><input type="hidden" id="edit-cat-id"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div class="form-group" style="grid-column:1/-1"><label>Nome</label><input type="text" id="edit-cat-name"></div><div class="form-group"><label>Tipo</label><select id="edit-cat-tipo"><option value="uscita">Uscita</option><option value="entrata">Entrata</option><option value="entrambi">Entrambi</option></select></div><div class="form-group"><label>Colore</label><input type="color" id="edit-cat-color" style="width:100%;height:36px;border:1px solid var(--border);border-radius:8px;padding:2px;cursor:pointer"></div></div><div class="modal-btns"><button class="btn btn-ghost" data-action="close-modal" data-modal="modal-cat">Annulla</button><button class="btn btn-primary" data-action="save-edit-cat">Salva</button></div></div></div>
@@ -486,6 +487,7 @@ function openMov(id){
   document.getElementById('mov-importo').value=m?m.importo:'';
   document.getElementById('mov-tipologia').value=m?m.tipologia:'uscita';
   document.getElementById('mov-desc').value=m?m.descrizione||'':'';
+  document.getElementById('mov-tr').checked=false;
   updateMovForm(m?.categoria,m?.obiettivo_id);
   if(m)document.getElementById('mov-tipo').value=m.tipo;
   updateMovTipo();openModal('modal-mov');
@@ -495,6 +497,8 @@ function updateMovForm(selCat,selObj){
   document.getElementById('mov-categoria').innerHTML=db.categorie.filter(c=>c.tipo===tipol||c.tipo==='entrambi').map(c=>`<option value="${c.id}"${c.id===selCat?' selected':''}>${c.nome}</option>`).join('');
   document.getElementById('mov-tipo').innerHTML=tipol==='entrata'?'<option value="entrata">Entrata</option>':'<option value="uscita_fissa">Uscita Fissa</option><option value="uscita_variabile">Uscita Variabile</option><option value="accumulo">Accumulo 2° conto</option>';
   document.getElementById('mov-obiettivo').innerHTML='<option value="">— Nessuno —</option>'+db.obiettivi.map(g=>`<option value="${g.id}"${g.id===selObj?' selected':''}>${g.nome}</option>`).join('');
+  document.getElementById('tr-toggle').style.display=tipol==='uscita'?'flex':'none';
+  if(tipol!=='uscita')document.getElementById('mov-tr').checked=false;
   updateMovTipo();
 }
 function updateMovTipo(){document.getElementById('obiettivo-group').style.display=document.getElementById('mov-tipo').value==='accumulo'?'flex':'none';}
@@ -503,11 +507,19 @@ async function saveMov(){
   const dv=document.getElementById('mov-data').value;if(!dv)return alert('Seleziona una data');
   const cat=document.getElementById('mov-categoria').value;if(!cat)return alert('Seleziona una categoria');
   const tipo=document.getElementById('mov-tipo').value;
-  const mov={id:editMovId||'m'+Date.now(),data:dv,importo,tipologia:document.getElementById('mov-tipologia').value,categoria:cat,tipo,descrizione:document.getElementById('mov-desc').value||null,obiettivo_id:tipo==='accumulo'?document.getElementById('mov-obiettivo').value||null:null};
+  const desc=document.getElementById('mov-desc').value||null;
+  const isTR=document.getElementById('mov-tr').checked&&document.getElementById('mov-tipologia').value==='uscita';
+  const mov={id:editMovId||'m'+Date.now(),data:dv,importo,tipologia:document.getElementById('mov-tipologia').value,categoria:cat,tipo,descrizione:desc,obiettivo_id:tipo==='accumulo'?document.getElementById('mov-obiettivo').value||null:null};
   loading(true);const {error}=await sb.from('movimenti').upsert(mov,{onConflict:'id'});
   if(error){showToast('Errore',true);loading(false);return;}
   if(editMovId){const i=db.movimenti.findIndex(m=>m.id===editMovId);db.movimenti[i]=mov;}else db.movimenti.unshift(mov);
-  loading(false);closeModal('modal-mov');showToast('Salvato ✓');renderMovimenti();
+  // Trade Republic: crea prelievo dal 2° Conto
+  if(isTR&&!editMovId){
+    const trMov={id:'tr'+Date.now(),data:dv,importo:-importo,tipologia:'uscita',categoria:cat,tipo:'accumulo',descrizione:'TR ← '+(desc||catById(cat)?.nome||'Prelievo'),obiettivo_id:null};
+    const {error:e2}=await sb.from('movimenti').upsert(trMov,{onConflict:'id'});
+    if(!e2)db.movimenti.unshift(trMov);
+  }
+  loading(false);closeModal('modal-mov');showToast(isTR?'Salvato + prelievo TR ✓':'Salvato ✓');renderMovimenti();
 }
 async function deleteMov(id){
   if(!confirm('Eliminare?'))return;loading(true);
@@ -534,7 +546,7 @@ function renderSecondo(){
   const sorted=[...acc].sort((a,b)=>new Date(b.data)-new Date(a.data));
   const tbody=document.getElementById('secondo-body');const empty=document.getElementById('secondo-empty');
   if(!sorted.length){tbody.innerHTML='';empty.style.display='block';return;}empty.style.display='none';
-  tbody.innerHTML=sorted.map(m=>{const goal=m.obiettivo_id?db.obiettivi.find(g=>g.id===m.obiettivo_id):null;return`<tr><td>${dStr(m.data)}</td><td>${m.descrizione||'—'}</td><td>${goal?`<span class="badge badge-purple">${goal.nome}</span>`:'<span style="color:#9ca3af">—</span>'}</td><td style="text-align:right;font-weight:600;color:#7c3aed">+${fmt(m.importo)}</td><td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm btn-ghost" data-action="edit-mov" data-id="${m.id}"><i class="ti ti-edit"></i></button><button class="btn btn-sm btn-danger" data-action="del-mov" data-id="${m.id}"><i class="ti ti-trash"></i></button></div></td></tr>`;}).join('');
+  tbody.innerHTML=sorted.map(m=>{const goal=m.obiettivo_id?db.obiettivi.find(g=>g.id===m.obiettivo_id):null;const neg=Number(m.importo)<0;return`<tr><td>${dStr(m.data)}</td><td>${m.descrizione||'—'}</td><td>${goal?`<span class="badge badge-purple">${goal.nome}</span>`:'<span style="color:#9ca3af">—</span>'}</td><td style="text-align:right;font-weight:600;color:${neg?'#dc2626':'#7c3aed'}">${neg?'−'+fmt(Math.abs(m.importo)):'+'+fmt(m.importo)}</td><td><div style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-sm btn-ghost" data-action="edit-mov" data-id="${m.id}"><i class="ti ti-edit"></i></button><button class="btn btn-sm btn-danger" data-action="del-mov" data-id="${m.id}"><i class="ti ti-trash"></i></button></div></td></tr>`;}).join('');
 }
 
 // ═══════════════════════ OBIETTIVI ════════════════════════════════
