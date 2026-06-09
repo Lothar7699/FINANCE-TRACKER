@@ -2,8 +2,20 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Finanza Personale</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Finanze">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#4f46e5">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='108' fill='%234f46e5'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui' fill='white'%3E€%3C/text%3E%3C/svg%3E">
+<script>
+if('serviceWorker' in navigator){/* no SW needed for basic PWA */}
+const _manifest=JSON.stringify({name:"Finanza Personale",short_name:"Finanze",start_url:location.href.split('?')[0],display:"standalone",background_color:"#ffffff",theme_color:"#4f46e5",icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='108' fill='%234f46e5'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui' fill='white'%3E€%3C/text%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml"}]});
+const _mBlob=new Blob([_manifest],{type:'application/json'});
+const _mLink=document.createElement('link');_mLink.rel='manifest';_mLink.href=URL.createObjectURL(_mBlob);document.head.appendChild(_mLink);
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
