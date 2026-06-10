@@ -93,6 +93,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
 /* OBIETTIVO GROUP */
 #obiettivo-row{display:none}
 
+/* TR TOGGLE */
+#tr-row{display:flex}
+#tr-row .tr-label{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+#tr-row .tr-label i{color:#7c3aed;font-size:18px}
+.ios-switch{position:relative;width:51px;height:31px;flex-shrink:0}
+.ios-switch input{opacity:0;width:0;height:0}
+.ios-switch span{position:absolute;inset:0;background:#e5e5ea;border-radius:16px;transition:.3s;cursor:pointer}
+.ios-switch span:before{content:'';position:absolute;width:27px;height:27px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ios-switch input:checked+span{background:#7c3aed}
+.ios-switch input:checked+span:before{transform:translateX(20px)}
+
 /* Importo grande */
 .importo-display{padding:20px 16px 8px;text-align:center}
 .importo-label{font-size:13px;color:var(--muted);margin-bottom:4px}
@@ -110,7 +121,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
 <div class="header">
   <div class="header-top">
     <div class="header-title">💰 Finanza</div>
-    <div class="header-date" id="header-date"></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="header-date" id="header-date"></div>
+      <button onclick="reloadApp()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px" title="Aggiorna">↻</button>
+    </div>
   </div>
   <div class="header-sub" id="header-sub">Caricamento...</div>
 </div>
@@ -167,6 +181,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;ba
     <div class="form-row">
       <label>Descrizione</label>
       <input type="text" id="mov-desc" placeholder="Opzionale" inputmode="text">
+    </div>
+    <div class="form-row" id="tr-row">
+      <div class="tr-label">
+        <i class="ti ti-building-bank"></i>
+        <span style="font-size:15px;font-weight:500">Trade Republic</span>
+      </div>
+      <label class="ios-switch">
+        <input type="checkbox" id="mov-tr">
+        <span></span>
+      </label>
     </div>
   </div>
 
@@ -242,11 +266,14 @@ function setTipologia(val){
   if(val==='entrata'){
     tipoMov='entrata';
     document.getElementById('seg-tipo-wrap').style.display='none';
+    document.getElementById('tr-row').style.display='none';
+    document.getElementById('mov-tr').checked=false;
   } else {
     tipoMov='uscita_variabile';
     document.getElementById('seg-tipo-wrap').style.display='block';
     document.querySelectorAll('#seg-tipo .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.val==='uscita_variabile'));
     document.getElementById('obiettivo-row').style.display='none';
+    document.getElementById('tr-row').style.display='flex';
   }
   populateCategorie();
 }
@@ -255,6 +282,8 @@ function setTipoMov(val){
   tipoMov=val;
   document.querySelectorAll('#seg-tipo .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===val));
   document.getElementById('obiettivo-row').style.display=val==='accumulo'?'flex':'none';
+  document.getElementById('tr-row').style.display=val==='accumulo'?'none':'flex';
+  if(val==='accumulo')document.getElementById('mov-tr').checked=false;
 }
 
 // ── POPULATE SELECTS ──────────────────────────────────────────────────
@@ -296,6 +325,8 @@ async function saveMov(){
   if(!cat){showToast('Seleziona una categoria',true);return;}
 
   const tipo_finale=tipologia==='entrata'?'entrata':tipoMov;
+  const isTR=document.getElementById('mov-tr').checked&&tipologia==='uscita'&&tipoMov!=='accumulo';
+  const desc=document.getElementById('mov-desc').value||null;
   const mov={
     id:'m'+Date.now(),
     data:data_mov,
@@ -303,7 +334,7 @@ async function saveMov(){
     tipologia,
     categoria:cat,
     tipo:tipo_finale,
-    descrizione:document.getElementById('mov-desc').value||null,
+    descrizione:desc,
     obiettivo_id:tipo_finale==='accumulo'?document.getElementById('mov-obiettivo').value||null:null,
   };
 
@@ -312,18 +343,25 @@ async function saveMov(){
 
   const {error}=await sb.from('movimenti').insert(mov);
 
-  btn.classList.remove('loading');btn.textContent='Salva movimento';
+  if(error){btn.classList.remove('loading');btn.textContent='Salva movimento';showToast('Errore nel salvataggio',true);return;}
 
-  if(error){showToast('Errore nel salvataggio',true);return;}
+  // Trade Republic: crea prelievo dal 2° Conto
+  if(isTR){
+    const catNome=categorie.find(c=>c.id===cat)?.nome||'Prelievo';
+    const trMov={id:'tr'+Date.now(),data:data_mov,importo:-importo,tipologia:'uscita',categoria:cat,tipo:'accumulo',descrizione:'TR ← '+(desc||catNome),obiettivo_id:null};
+    await sb.from('movimenti').insert(trMov);
+  }
+
+  btn.classList.remove('loading');btn.textContent='Salva movimento';
 
   // Reset form
   document.getElementById('mov-importo').value='';
   document.getElementById('mov-desc').value='';
   document.getElementById('mov-data').value=today.toISOString().split('T')[0];
+  document.getElementById('mov-tr').checked=false;
 
-  showToast('✓ Movimento salvato!');
+  showToast(isTR?'✓ Salvato + prelievo TR':'✓ Movimento salvato!');
   updateHeaderBalance();
-  // aggiorna lista recenti in background
   loadRecenti();
 }
 
@@ -343,19 +381,32 @@ function renderRecenti(){
     const cat=m.categorie||{nome:'—',colore:'#8e8e93'};
     const d=new Date(m.data+'T00:00:00');
     const dateStr=`${d.getDate()} ${MONTHS[d.getMonth()]}`;
-    const amtClass=m.tipo==='accumulo'?'accumulo':m.tipologia;
-    const sign=m.tipologia==='entrata'?'+':'−';
+    const neg=Number(m.importo)<0;
+    const amtClass=neg?'uscita':m.tipo==='accumulo'?'accumulo':m.tipologia;
+    const sign=neg?'−':m.tipologia==='entrata'?'+':'−';
+    const displayAmt=neg?Math.abs(m.importo):m.importo;
     return `<div class="mov-item">
       <div class="mov-icon" style="background:${cat.colore}22">
-        <span style="font-size:18px">${m.tipologia==='entrata'?'↑':m.tipo==='accumulo'?'⇒':'↓'}</span>
+        <span style="font-size:18px">${neg?'⇐':m.tipologia==='entrata'?'↑':m.tipo==='accumulo'?'⇒':'↓'}</span>
       </div>
       <div class="mov-info">
         <div class="mov-name">${cat.nome}</div>
         <div class="mov-sub">${m.descrizione||TL[m.tipo]||m.tipo} · ${dateStr}</div>
       </div>
-      <div class="mov-amount ${amtClass}">${sign}${fmt(m.importo)}</div>
+      <div class="mov-amount ${amtClass}">${sign}${fmt(displayAmt)}</div>
     </div>`;
   }).join('');
+}
+
+function reloadApp(){
+  const btn=document.querySelector('[onclick="reloadApp()"]');
+  btn.style.animation='spin .6s linear infinite';
+  loadData().then(()=>{
+    updateHeaderBalance();
+    if(document.getElementById('page-recenti').classList.contains('active'))renderRecenti();
+    btn.style.animation='';
+    showToast('Aggiornato ✓');
+  });
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────
